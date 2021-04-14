@@ -1,7 +1,7 @@
 """
 General class containing specific GUI aesthetics variables to be inherited by the main GUI call
 
-Maria Cobo and Kirubin Pillay 30.12.2020
+Kirubin Pillay, Maria Cobo 30.12.2020
 """
 from tkinter import *
 from PIL import ImageTk
