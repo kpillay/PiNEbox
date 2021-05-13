@@ -34,8 +34,6 @@ class GUIaes:
 
     __imageLogo__ = PIL.Image.open(os.path.join(__absPath__, 'PiNeBox_logo.png'))
 
-
-
     # Render a general image for buttons etc.
     def __renderImageOnly__(self, width, height, ImageName):
         image = PIL.Image.open(os.path.join(self.__absPath__, ImageName))
@@ -45,7 +43,6 @@ class GUIaes:
         return photoImage
 
     # Render the logo
-
     def __renderLogo__(self, master):
         self.canvas_for_image = Canvas(master, height=int(180), width=int(420), borderwidth=0, highlightthickness=0,
                                        bg='#504f51')
@@ -54,13 +51,4 @@ class GUIaes:
         self.imageOnCanvas = self.canvas_for_image.create_image(0, 0, image=self.imageResized, anchor='nw')
         self.canvas_for_image.itemconfig(self.imageOnCanvas, image=self.imageResized)
         self.canvas_for_image.pack(anchor='nw', pady=(50, 1))
-
-
-# # Render an image on attached canvas (for logo in main UI etc.)
-#     def __renderImage__(self, master, width, height, ImageName):
-#         canvas_for_image = Canvas(master, height=int(height), width=int(width), borderwidth=0, highlightthickness=0)
-#         image = PIL.Image.open(os.path.join(self.__absPath__, ImageName))
-#         image.thumbnail((int(width), int(height)), PIL.Image.ANTIALIAS)
-#         canvas_for_image.image = ImageTk.PhotoImage(image)
-#         canvas_for_image.create_image(0, 0, image=canvas_for_image.image, anchor='nw')
-#         canvas_for_image.pack(side=TOP)
+        
