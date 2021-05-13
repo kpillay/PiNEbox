@@ -147,7 +147,7 @@ class PiNeMain(GUIaes):
         self.threadMain = threading.Thread(target=self.__countdown__)
         self.threadMain.start()
 
-        # Initialize socket connection
+        # Initialize socket connection and check if successful
 
     # Initiate stop sequence if system has started running
     def __initStop_callback__(self):
