@@ -124,7 +124,7 @@ class PiNeMain(GUIaes):
 
         # Set default IP and port values from text file
         IPfile = open('IPfile.txt', 'r')
-        self.varIP.set(IPfile.readline())
+        self.varIP.set(str.rstrip(IPfile.readline()))
         self.varPort.set(IPfile.readline())
 
     # Initiate socket connection on selecting Run callback
@@ -144,12 +144,15 @@ class PiNeMain(GUIaes):
         self.threadCountdown = threading.Thread(target=self.__countdown__)
         self.threadCountdown.start()
 
-        # Initialize socket connection and check if successful
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(self.__sockTimeout__-1)
-        __host__ = self.varIP.get()
-        __port__ = self.varPort.get()
-
+        # # MIGHT HAVE TO THREAD THIS TOO!
+        #
+        # # Initialize socket connection and check if successful
+        # # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # sock = socket.socket()
+        # sock.settimeout(self.__sockTimeout__-1)
+        # __host__ = self.varIP.get()
+        # __port__ = self.varPort.get()
+        #
         # try:
         #     sock.connect((__host__, int(__port__)))
         #
@@ -168,6 +171,8 @@ class PiNeMain(GUIaes):
         #     self.runButton.config(state=NORMAL)
         #
         #     return
+        #
+        # return
 
         # # Stop countdown if still running (also safely ends the thread)
         # self.cont = False
