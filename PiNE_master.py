@@ -18,6 +18,7 @@ from pathlib import Path
 import re
 import time
 import threading
+import socket
 
 
 # #### CLASS to initialise the main PiNe GUI ###############################################
@@ -33,6 +34,7 @@ class PiNeMain(GUIaes):
         self.window.resizable(0, 0)
         self.window.title(f'PiNe v{self.ver}')
         self.cont = False
+        self.__sockTimeout__ = 5  # Allow 30s to connect to IP otherwise throw exception
 
         # Set the icon
         __p1__ = PhotoImage(file=os.path.join(super().__absPath__, 'pine_icon3.png'))
@@ -90,6 +92,12 @@ class PiNeMain(GUIaes):
 
         self.instr_text.pack(side=TOP)
 
+        # Create message label
+        self.labelMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
+                                  text='', font=(super().__textFont__, super().__HeadFontSize__),
+                                  foreground=super().__colourText__)
+        self.labelMess.pack(side=LEFT)
+
         # Add button frame
         self.buttonFrame = Frame(self.frame1, highlightthickness=0, borderwidth=0, background=super().__frameBgColour__)
         self.buttonFrame.grid(row=5, column=0, padx=70, pady=(50, 5), sticky=W)
@@ -121,53 +129,80 @@ class PiNeMain(GUIaes):
 
     # Initiate socket connection on selecting Run callback
     def __initSocket_callback__(self):
+
         # Disable run button to avoid initialising multiple threads
         self.runButton.config(state=DISABLED)
 
-        # Create message label
-        self.labelMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
-                                  text='', font=(super().__textFont__, super().__HeadFontSize__),
-                                  foreground=super().__colourText__)
-        self.labelMess.pack(side=LEFT)
-
-        # Create countdown label
-        self.countdownMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
-                                      text='', font=(super().__textFont__, super().__HeadFontSize__),
-                                      foreground=super().__colourText__)
-        self.countdownMess.pack(side=LEFT)
-
         # Display status message
-        self.labelMess.config(text='Establishing connection...')
+        self.labelMess.config(text='Establishing connection...', foreground=super().__colourText__)
 
         # Enable stop button
         self.stopButton.config(state=NORMAL)
 
         # Start countdown on separate thread
         self.cont = True
-        self.threadMain = threading.Thread(target=self.__countdown__)
-        self.threadMain.start()
+        self.threadCountdown = threading.Thread(target=self.__countdown__)
+        self.threadCountdown.start()
 
         # Initialize socket connection and check if successful
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(self.__sockTimeout__-1)
+        __host__ = self.varIP.get()
+        __port__ = self.varPort.get()
+
+        # try:
+        #     sock.connect((__host__, int(__port__)))
+        #
+        # except socket.timeout:
+        #     # Stop countdown and reset
+        #     self.cont = False
+        #
+        #     # Destroy countdown and change label message text to unsuccessful
+        #     self.countdownMess.destroy()
+        #     self.labelMess.config(text='Connection Unsuccessful!')  # ADD RED
+        #
+        #     # Disable stop button
+        #     self.stopButton.config(state=DISABLED)
+        #
+        #     # Enable run button
+        #     self.runButton.config(state=NORMAL)
+        #
+        #     return
+
+        # # Stop countdown if still running (also safely ends the thread)
+        # self.cont = False
+        #
+        # # Create 'success' message label
+        # self.labelMess.config(text='Connection successful!')        # ADD GREEN
+        #
+        # # Begin messaging protocol by initialising PiNe_runProcess.py
+        # ...
 
     # Initiate stop sequence if system has started running
     def __initStop_callback__(self):
 
-        # Disable stop button
-        self.stopButton.config(state=DISABLED)
-
         # Stop countdown if still running (also safely ends the thread)
         self.cont = False
 
-        # Shut down messages
+        # Destroy countdown and delete label message text
         self.countdownMess.destroy()
-        self.labelMess.destroy()
+        self.labelMess.config(text='', foreground=super().__colourText__)
+
+        # Disable stop button
+        self.stopButton.config(state=DISABLED)
 
         # Enable run button
         self.runButton.config(state=NORMAL)
 
     # Perform a countdown while establishing connection (until externally cancelled)
     def __countdown__(self):
-        stTime = 60
+        # Create countdown label
+        self.countdownMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
+                                      text='', font=(super().__textFont__, super().__HeadFontSize__),
+                                      foreground=super().__colourText__)
+        self.countdownMess.pack(side=LEFT)
+
+        stTime = self.__sockTimeout__
         t = stTime
         while (t >= 0) & self.cont:
             self.countdownMess.config(text=str(t))
