@@ -14,9 +14,19 @@ import socket
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 8000         # Port to listen on (non-privileged ports are > 1023)
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# OLD VERSION
+# sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# sock.bind((HOST, PORT))
+
+sock = socket.socket()
 sock.bind((HOST, PORT))
+sock.listen(5)
+conn, addr = sock.accept()
+
+print('Connected by', addr)
 while True:
-    data, addr = sock.recvfrom(1024)
-    print("received message: {}".format(data))
+    # data, addr = sock.recvfrom(1024)
+    data = conn.recv(1024)
+    if data != '':
+        print("received message: {}".format(data))
 

@@ -11,6 +11,7 @@ from tkinter import ttk, messagebox
 from GUIaes import GUIaes
 from classes import validate
 from verSet import verSet
+from PiNe_runProcess import PiNeRun
 import logging.handlers
 import traceback
 import os
@@ -189,11 +190,12 @@ class PiNeMain(GUIaes):
     def __initSocket__(self):
 
         # Initialise socket and set up timeout limit for connecting
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(self.__sockTimeout__)
+        # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock = socket.socket()
+        self.sock.settimeout(self.__sockTimeout__)
 
         try:
-            sock.connect((self.__host__, int(self.__port__)))
+            self.sock.connect((self.__host__, int(self.__port__)))
 
         # Occurs if a connection could not be established (often because IP or port is incorrect)
         except socket.timeout:
@@ -203,7 +205,6 @@ class PiNeMain(GUIaes):
             time.sleep(2)
 
             # Destroy countdown and change label message text to unsuccessful
-
             self.countdownMess.destroy()
             self.labelMess.config(text='Connection Timed Out.', foreground=super().__colourText__)
 
@@ -243,9 +244,11 @@ class PiNeMain(GUIaes):
         self.countdownMess.destroy()
         self.labelMess.config(text='Connection successful.', foreground=super().__colourGood__)
 
-        # Send test message
-        MESSAGE = b'testing testing 123'
-        sock.sendall(MESSAGE)
+        # Send initial connection message
+        initMess = 'PiNe_connected'
+        self.sock.sendall(PiNeRun.sendiXmess(initMess))
+
+        # Instantiate PiNeRun instance
 
 
 # Initialise and run tkinter loop
