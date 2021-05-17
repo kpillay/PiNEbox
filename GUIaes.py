@@ -23,9 +23,10 @@ class GUIaes:
     __subHeadFontSize__ = 14
     __helpFontSize__ = 12
     __textFontSize__ = 12
-    __frameBgColour__ = ('#504f51')
-    __colourSubHead__ = ('#808080')
-    __colourText__ = ('#f28e7c')
+    __frameBgColour__ = '#504f51'
+    __colourSubHead__ = '#808080'
+    __colourText__ = '#f28e7c'
+    __colourGood__ = '#61b299'
 
     if getattr(sys, 'frozen', False):
         __absPath__ = str(Path.home())

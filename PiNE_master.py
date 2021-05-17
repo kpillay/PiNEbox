@@ -34,7 +34,7 @@ class PiNeMain(GUIaes):
         self.window.resizable(0, 0)
         self.window.title(f'PiNe v{self.ver}')
         self.cont = False
-        self.__sockTimeout__ = 5  # Allow 30s to connect to IP otherwise throw exception
+        self.__sockTimeout__ = 10  # Allow 30s to connect to IP otherwise throw exception
 
         # Set the icon
         __p1__ = PhotoImage(file=os.path.join(super().__absPath__, 'pine_icon3.png'))
@@ -144,43 +144,13 @@ class PiNeMain(GUIaes):
         self.threadCountdown = threading.Thread(target=self.__countdown__)
         self.threadCountdown.start()
 
-        # # MIGHT HAVE TO THREAD THIS TOO!
-        #
-        # # Initialize socket connection and check if successful
-        # # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # sock = socket.socket()
-        # sock.settimeout(self.__sockTimeout__-1)
-        # __host__ = self.varIP.get()
-        # __port__ = self.varPort.get()
-        #
-        # try:
-        #     sock.connect((__host__, int(__port__)))
-        #
-        # except socket.timeout:
-        #     # Stop countdown and reset
-        #     self.cont = False
-        #
-        #     # Destroy countdown and change label message text to unsuccessful
-        #     self.countdownMess.destroy()
-        #     self.labelMess.config(text='Connection Unsuccessful!')  # ADD RED
-        #
-        #     # Disable stop button
-        #     self.stopButton.config(state=DISABLED)
-        #
-        #     # Enable run button
-        #     self.runButton.config(state=NORMAL)
-        #
-        #     return
-        #
-        # return
+        # Initialize socket connection and check if successful
+        self.__host__ = self.varIP.get()
+        self.__port__ = self.varPort.get()
+        self.threadSock = threading.Thread(target=self.__initSocket__)
+        self.threadSock.start()
 
-        # # Stop countdown if still running (also safely ends the thread)
-        # self.cont = False
-        #
-        # # Create 'success' message label
-        # self.labelMess.config(text='Connection successful!')        # ADD GREEN
-        #
-        # # Begin messaging protocol by initialising PiNe_runProcess.py
+        # Begin messaging protocol by initialising PiNe_runProcess.py
         # ...
 
     # Initiate stop sequence if system has started running
@@ -190,7 +160,8 @@ class PiNeMain(GUIaes):
         self.cont = False
 
         # Destroy countdown and delete label message text
-        self.countdownMess.destroy()
+        if hasattr(self, 'countdownMess'):               # May have been destroyed during threading beforehand
+            self.countdownMess.destroy()
         self.labelMess.config(text='', foreground=super().__colourText__)
 
         # Disable stop button
@@ -213,6 +184,68 @@ class PiNeMain(GUIaes):
             self.countdownMess.config(text=str(t))
             time.sleep(1)
             t -= 1
+
+    # Set up the initial socket connection with the server (threaded function_
+    def __initSocket__(self):
+
+        # Initialise socket and set up timeout limit for connecting
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(self.__sockTimeout__)
+
+        try:
+            sock.connect((self.__host__, int(self.__port__)))
+
+        # Occurs if a connection could not be established (often because IP or port is incorrect)
+        except socket.timeout:
+
+            # Stop countdown and reset
+            self.cont = False
+            time.sleep(2)
+
+            # Destroy countdown and change label message text to unsuccessful
+
+            self.countdownMess.destroy()
+            self.labelMess.config(text='Connection Timed Out.', foreground=super().__colourText__)
+
+            # Disable stop button
+            self.stopButton.config(state=DISABLED)
+
+            # Enable run button
+            self.runButton.config(state=NORMAL)
+
+            return
+
+        # Occurs if server is not listening at the specified port
+        except ConnectionRefusedError:
+
+            # Stop countdown and reset
+            self.cont = False
+            time.sleep(2)
+
+            # Destroy countdown and change label message text to unsuccessful
+            self.countdownMess.destroy()
+            self.labelMess.config(text='Connection Refused.', foreground=super().__colourText__)
+
+            # Disable stop button
+            self.stopButton.config(state=DISABLED)
+
+            # Enable run button
+            self.runButton.config(state=NORMAL)
+
+            return
+
+        # If connection successful, system then can only be exited by stop button callback
+        # Stop countdown if still running
+        self.cont = False
+        time.sleep(2)
+
+        # Create 'success' message label
+        self.countdownMess.destroy()
+        self.labelMess.config(text='Connection successful.', foreground=super().__colourGood__)
+
+        # Send test message
+        MESSAGE = b'testing testing 123'
+        sock.sendall(MESSAGE)
 
 
 # Initialise and run tkinter loop
