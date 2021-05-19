@@ -48,11 +48,15 @@ class PiNeMain(GUIaes):
 
     # Initialize the system
     def __call__(self):
+
         # Set the icon
         __p1__ = PhotoImage(file=os.path.join(super().__absPath__, 'pine_icon3.png'))
         self.window.iconphoto(False, __p1__)
 
-        # #### adding frames to the window  #####
+        # Override default close option
+        self.window.protocol('WM_DELETE_WINDOW', self.__initQuit_callback__)
+
+        # ####### CONSTRUCT TKINTER GUI
         self.frame1 = tk.Frame(self.window, bg=super().__frameBgColour__)
         self.frame1.grid(row=0, column=0, sticky='nsew')
 
@@ -63,7 +67,6 @@ class PiNeMain(GUIaes):
         self.window.grid_columnconfigure(0, minsize=300)
         self.window.grid_columnconfigure(1, minsize=500)
 
-        # adding elements to frame1
         # IP address label
         self.labelIP = tk.Label(self.frame1, bg=super().__frameBgColour__,
                                 text='IP address',
@@ -130,11 +133,80 @@ class PiNeMain(GUIaes):
         # Add QUIT button
         self.quitImage = super().__renderImageOnly__(50, 50, 'quit_icon_grey.png')
         self.quitButton = Button(self.buttonFrame, image=self.quitImage, compound=LEFT,  highlightthickness=0,
-                                 borderwidth=0, highlightbackground='black')
+                                 borderwidth=0, highlightbackground='black', command=self.__initQuit_callback__)
         self.quitButton.pack(side=LEFT, padx=4)
 
+        # Set the broken pipe error check
+        self.pipeCheck = tk.BooleanVar(False)
+        self.pipeCheck.trace("w", self.__pipeBreakSafe__)
+
         # Set logic state, default IP and port values from text file
-        IPfile = open('setup.txt', 'r')
+        self.__loadSetupFile__('setup.txt')
+
+    # ####### WIDGET CALLBACKS
+    # Initiate socket connection on selecting Run callback
+    def __initSocket_callback__(self):
+
+        # Disable run button to avoid initialising multiple threads
+        self.runButton.config(state=DISABLED)
+
+        # Display status message
+        self.labelMess.config(text='Establishing connection...', foreground=super().__colourText__)
+
+        # Enable stop button
+        self.stopButton.config(state=NORMAL)
+
+        # Start countdown on separate thread
+        self.cont = True
+        self.threadCountdown = threading.Thread(target=self.__countdown__)
+        self.threadCountdown.start()
+
+        # Initialize socket connection and check if successful
+        self.__host__ = self.varIP.get()
+        self.__port__ = int(self.varPort.get())
+
+        self.threadSock = threading.Thread(target=self.__initSocket__)
+        self.threadSock.start()
+
+    # Initiate stop sequence if system has started running
+    def __initStop_callback__(self):
+
+        # Stop countdown if still running (also safely ends the thread)
+        self.cont = False
+
+        # Stop UDP transmission
+        if hasattr(self, 'triggerSend'):
+            self.triggerSend.cancel = True
+
+        time.sleep(1)
+
+        # Destroy countdown and delete label message text
+        if hasattr(self, 'countdownMess'):               # May have been destroyed during threading beforehand
+            self.countdownMess.destroy()
+        self.labelMess.config(text='', foreground=super().__colourText__)
+
+        # # Close open socket (if established)
+        # if self.sock is not None:
+        #     try:
+        #         self.sock.shutdown(socket.SHUT_RDWR)    # Fail-safe in case server has been shut down first
+        #     except OSError:
+        #         pass
+        #     self.sock.close()
+        #     self.sock = None
+        # Disable stop button
+        self.stopButton.config(state=DISABLED)
+
+        # Enable run button
+        self.runButton.config(state=NORMAL)
+
+    # Initiate quit sequence
+    def __initQuit_callback__(self):
+        pass
+
+    # ####### METHODS
+    # Loads a setup file and sets various properties for the GUI to use and connect to socket
+    def __loadSetupFile__(self, filename):
+        IPfile = open(filename, 'r')
 
         # Load logic state
         __logicState__ = str.rstrip(IPfile.readline())
@@ -179,66 +251,6 @@ class PiNeMain(GUIaes):
             self.labelMess.config(text='Fatal Error: PORT value in setup.txt', foreground=super().__colourText__)
             self.runButton.config(state=DISABLED)
             return
-
-        # Set the broken pipe error check
-        self.pipeCheck = tk.BooleanVar(False)
-        self.pipeCheck.trace("w", self.__pipeBreakSafe__)
-
-    # Initiate socket connection on selecting Run callback
-    def __initSocket_callback__(self):
-
-        # Disable run button to avoid initialising multiple threads
-        self.runButton.config(state=DISABLED)
-
-        # Display status message
-        self.labelMess.config(text='Establishing connection...', foreground=super().__colourText__)
-
-        # Enable stop button
-        self.stopButton.config(state=NORMAL)
-
-        # Start countdown on separate thread
-        self.cont = True
-        self.threadCountdown = threading.Thread(target=self.__countdown__)
-        self.threadCountdown.start()
-
-        # Initialize socket connection and check if successful
-        self.__host__ = self.varIP.get()
-        self.__port__ = int(self.varPort.get())
-
-        self.threadSock = threading.Thread(target=self.__initSocket__)
-        self.threadSock.start()
-
-    # Initiate stop sequence if system has started running
-    def __initStop_callback__(self):
-
-        # Stop countdown if still running (also safely ends the thread)
-        self.cont = False
-
-        # Destroy countdown and delete label message text
-        if hasattr(self, 'countdownMess'):               # May have been destroyed during threading beforehand
-            self.countdownMess.destroy()
-        self.labelMess.config(text='', foreground=super().__colourText__)
-
-        # Close open socket (if established)
-        if self.sock is not None:
-            try:
-                self.sock.shutdown(socket.SHUT_RDWR)    # Fail-safe in case server has been shut down first
-            except OSError:
-                pass
-            self.sock.close()
-            self.sock = None
-
-        # Disable stop button
-        self.stopButton.config(state=DISABLED)
-
-        # Enable run button
-        self.runButton.config(state=NORMAL)
-
-        # Stop UDP transmission
-        self.triggerSend.cancel = True
-
-    # Initiate stop sequence if system has started running
-    # def __initQuit_callback__(self):
 
     # Process to deal with closing safely when unexpected broken pipe occurs
     def __pipeBreakSafe__(self, *_):

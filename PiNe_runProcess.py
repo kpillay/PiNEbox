@@ -44,16 +44,16 @@ class PiNeRun:
         self.inputLance = Button(6, pull_up=self.logicState)                        # Lance
         self.inputForce = Button(16, pull_up=self.logicState)                       # Force
 
-    # Threaded function
+    # Threaded function to run the main trigger send/recieve from the PiNe box
     def __call__(self):
-        print('Trigger listening activated!')
-
         try:
             while not self.cancel:
                 # Push-button event
-                if not self.inputButton.is_pressed:
+                if self.inputButton.is_pressed:
                     MESS = 'PushButton'
                     self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
+
+                    # Flash the LEDs
                     self.ledButton.on()
                     time.sleep(self.LEDduration)
                     self.ledButton.off()
@@ -61,9 +61,7 @@ class PiNeRun:
                 # PinPrick event
                 elif self.inputPinPrick.is_pressed:
                     MESS = 'PinPrick'
-                    self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
-
-                    # Flash the LEDs
+                    self.sock.sendall(self.sendiXmess(MESS))
                     self.ledPinPrick.on()
                     time.sleep(self.LEDduration)
                     self.ledPinPrick.off()
@@ -99,6 +97,14 @@ class PiNeRun:
                     self.ledForce.on()
                     time.sleep(self.LEDduration)
                     self.ledForce.off()
+
+            # Close open socket (if established)
+            try:
+                self.sock.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            self.sock.close()
+            self.sock = None
 
             # Close GPIO pins if while loop is broken
             self.__closeGPIOs__()
