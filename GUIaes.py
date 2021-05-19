@@ -52,4 +52,3 @@ class GUIaes:
         self.imageOnCanvas = self.canvas_for_image.create_image(0, 0, image=self.imageResized, anchor='nw')
         self.canvas_for_image.itemconfig(self.imageOnCanvas, image=self.imageResized)
         self.canvas_for_image.pack(anchor='nw', pady=(50, 1))
-        

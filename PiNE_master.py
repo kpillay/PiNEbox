@@ -12,6 +12,9 @@ from GUIaes import GUIaes
 from classes import validate
 from verSet import verSet
 from PiNe_runProcess import PiNeRun
+from gpiozero import Device
+from gpiozero.pins.mock import MockFactory
+import platform
 import logging.handlers
 import traceback
 import os
@@ -30,19 +33,26 @@ class PiNeMain(GUIaes):
         self.releaseDate = releaseDate
         self.dev = dev
 
+        # Check if code is being run on external OS off-Pi, in which case set dummy GPIO pins
+        if (platform.system() == 'Darwin') | ((platform.system() == 'Linux') | (platform.system() == 'Windows')):
+            Device.pin_factory = MockFactory()
+
         self.window = tk.Tk()
         self.window.geometry('800x480')
         self.window.resizable(0, 0)
         self.window.title(f'PiNe v{self.ver}')
-        self.cont = False
-        self.__sockTimeout__ = 10  # Allow 30s to connect to IP otherwise throw exception
 
+        self.cont = False
+        self.sock = None
+        self.__sockTimeout__ = 9  # Allow 9s to connect to IP otherwise throw exception
+
+    # Initialize the system
+    def __call__(self):
         # Set the icon
         __p1__ = PhotoImage(file=os.path.join(super().__absPath__, 'pine_icon3.png'))
         self.window.iconphoto(False, __p1__)
 
-# #### adding frames to the window  #####
-
+        # #### adding frames to the window  #####
         self.frame1 = tk.Frame(self.window, bg=super().__frameBgColour__)
         self.frame1.grid(row=0, column=0, sticky='nsew')
 
@@ -123,10 +133,56 @@ class PiNeMain(GUIaes):
                                  borderwidth=0, highlightbackground='black')
         self.quitButton.pack(side=LEFT, padx=4)
 
-        # Set default IP and port values from text file
-        IPfile = open('IPfile.txt', 'r')
-        self.varIP.set(str.rstrip(IPfile.readline()))
-        self.varPort.set(IPfile.readline())
+        # Set logic state, default IP and port values from text file
+        IPfile = open('setup.txt', 'r')
+
+        # Load logic state
+        __logicState__ = str.rstrip(IPfile.readline())
+        if (__logicState__[0:5] == 'LOGIC') & ((__logicState__[6:] == 'HIGH') | (__logicState__[6:] == 'LOW')):
+            self.__logicState__ = __logicState__[6:]
+        else:
+            self.varIP.set('-')
+            self.varPort.set('-')
+            self.labelMess.config(text='Fatal Error: LOGIC state in setup.txt', foreground=super().__colourText__)
+            self.runButton.config(state=DISABLED)
+            return
+
+        # Load LED duration value
+        __LEDduration__ = str.rstrip(IPfile.readline())
+        if (__LEDduration__[0:11] == 'LEDduration') & (__LEDduration__[12:] != ''):
+            self.__LEDduration__ = float(__LEDduration__[12:])
+        else:
+            self.varIP.set('-')
+            self.varPort.set('-')
+            self.labelMess.config(text='Fatal Error: LEDduration in setup.txt', foreground=super().__colourText__)
+            self.runButton.config(state=DISABLED)
+            return
+
+        # Load default IP address
+        __IPaddr__ = str.rstrip(IPfile.readline())
+        if (__IPaddr__[0:2] == 'IP') & (__IPaddr__[3:] != ''):
+            self.varIP.set(__IPaddr__[3:])
+        else:
+            self.varIP.set('-')
+            self.varPort.set('-')
+            self.labelMess.config(text='Fatal Error: IP address in setup.txt', foreground=super().__colourText__)
+            self.runButton.config(state=DISABLED)
+            return
+
+        # Load default IP address
+        __port__ = str.rstrip(IPfile.readline())
+        if (__port__[0:4] == 'PORT') & (__port__[5:] != ''):
+            self.varPort.set(__port__[5:])
+        else:
+            self.varIP.set('-')
+            self.varPort.set('-')
+            self.labelMess.config(text='Fatal Error: PORT value in setup.txt', foreground=super().__colourText__)
+            self.runButton.config(state=DISABLED)
+            return
+
+        # Set the broken pipe error check
+        self.pipeCheck = tk.BooleanVar(False)
+        self.pipeCheck.trace("w", self.__pipeBreakSafe__)
 
     # Initiate socket connection on selecting Run callback
     def __initSocket_callback__(self):
@@ -147,12 +203,10 @@ class PiNeMain(GUIaes):
 
         # Initialize socket connection and check if successful
         self.__host__ = self.varIP.get()
-        self.__port__ = self.varPort.get()
+        self.__port__ = int(self.varPort.get())
+
         self.threadSock = threading.Thread(target=self.__initSocket__)
         self.threadSock.start()
-
-        # Begin messaging protocol by initialising PiNe_runProcess.py
-        # ...
 
     # Initiate stop sequence if system has started running
     def __initStop_callback__(self):
@@ -165,14 +219,35 @@ class PiNeMain(GUIaes):
             self.countdownMess.destroy()
         self.labelMess.config(text='', foreground=super().__colourText__)
 
+        # Close open socket (if established)
+        if self.sock is not None:
+            try:
+                self.sock.shutdown(socket.SHUT_RDWR)    # Fail-safe in case server has been shut down first
+            except OSError:
+                pass
+            self.sock.close()
+            self.sock = None
+
         # Disable stop button
         self.stopButton.config(state=DISABLED)
 
         # Enable run button
         self.runButton.config(state=NORMAL)
 
+        # Stop UDP transmission
+        self.triggerSend.cancel = True
+
+    # Initiate stop sequence if system has started running
+    # def __initQuit_callback__(self):
+
+    # Process to deal with closing safely when unexpected broken pipe occurs
+    def __pipeBreakSafe__(self, *_):
+        self.__initStop_callback__()
+        self.labelMess.config(text='Connection Lost. Check server & retry.', foreground=super().__colourText__)
+
     # Perform a countdown while establishing connection (until externally cancelled)
     def __countdown__(self):
+
         # Create countdown label
         self.countdownMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
                                       text='', font=(super().__textFont__, super().__HeadFontSize__),
@@ -186,23 +261,22 @@ class PiNeMain(GUIaes):
             time.sleep(1)
             t -= 1
 
-    # Set up the initial socket connection with the server (threaded function_
+    # Set up the initial socket connection with the server (threaded function)
     def __initSocket__(self):
 
         # Initialise socket and set up timeout limit for connecting
-        # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock = socket.socket()
-        self.sock.settimeout(self.__sockTimeout__)
+        self.sock.settimeout(self.__sockTimeout__+1)
 
         try:
-            self.sock.connect((self.__host__, int(self.__port__)))
+            self.sock.connect((self.__host__, self.__port__))
 
         # Occurs if a connection could not be established (often because IP or port is incorrect)
         except socket.timeout:
 
             # Stop countdown and reset
             self.cont = False
-            time.sleep(2)
+            time.sleep(1)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
 
             # Destroy countdown and change label message text to unsuccessful
             self.countdownMess.destroy()
@@ -221,7 +295,7 @@ class PiNeMain(GUIaes):
 
             # Stop countdown and reset
             self.cont = False
-            time.sleep(2)
+            time.sleep(1)
 
             # Destroy countdown and change label message text to unsuccessful
             self.countdownMess.destroy()
@@ -238,17 +312,26 @@ class PiNeMain(GUIaes):
         # If connection successful, system then can only be exited by stop button callback
         # Stop countdown if still running
         self.cont = False
-        time.sleep(2)
+        time.sleep(1)
+
+        # Overwrite text file with new correct values
+        with open('setup.txt', 'w') as IPfile:
+            IPfile.write(f'LOGIC={self.__logicState__}\nLEDduration={self.__LEDduration__}\n'
+                         f'IP={self.varIP.get()}\nPORT={self.varPort.get()}')
 
         # Create 'success' message label
         self.countdownMess.destroy()
         self.labelMess.config(text='Connection successful.', foreground=super().__colourGood__)
 
         # Send initial connection message
-        initMess = 'PiNe_connected'
+        initMess = 'PiNeConnected'
         self.sock.sendall(PiNeRun.sendiXmess(initMess))
 
-        # Instantiate PiNeRun instance
+        # Instantiate PiNeRun instance and begin trigger listening (threaded)
+        self.triggerSend = PiNeRun(self.sock, self.pipeCheck, logicState=self.__logicState__,
+                                   LEDduration=self.__LEDduration__)
+        self.threadTrigg = threading.Thread(target=self.triggerSend)
+        self.threadTrigg.start()
 
 
 # Initialise and run tkinter loop
@@ -262,6 +345,7 @@ def main(ver, releaseDate, dev):
     # Run the GUI
     # try:
         app = PiNeMain(ver, releaseDate, dev)
+        app()
     # except Exception as inst:
     #     messagebox.showerror('UNKNOWN ERROR', 'UNKNOWN ERROR: Please contact system administrator')
     #     sys.exit()

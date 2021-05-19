@@ -1,0 +1,4 @@
+LOGIC=HIGH
+LEDduration=0.3
+IP=127.0.0.1
+PORT=8000
