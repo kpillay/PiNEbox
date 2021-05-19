@@ -59,7 +59,7 @@ class PiNeRun:
                     self.ledButton.off()
 
                 # PinPrick event
-                elif self.inputPinPrick.is_pressed:
+                elif not self.inputPinPrick.is_pressed:
                     MESS = 'PinPrick'
                     self.sock.sendall(self.sendiXmess(MESS))
                     self.ledPinPrick.on()
@@ -98,6 +98,20 @@ class PiNeRun:
                     time.sleep(self.LEDduration)
                     self.ledForce.off()
 
+            # Close GPIO pins if while loop is broken
+            self.__closeGPIOs__()
+
+            # Close open socket (if established)
+            self.sock.shutdown(socket.SHUT_RDWR)
+            self.sock.close()
+            self.sock = None
+
+        # Catch if server connection fails during data transmission
+        except BrokenPipeError:
+
+            # Close GPIO pins
+            self.__closeGPIOs__()
+
             # Close open socket (if established)
             try:
                 self.sock.shutdown(socket.SHUT_RDWR)
@@ -106,13 +120,8 @@ class PiNeRun:
             self.sock.close()
             self.sock = None
 
-            # Close GPIO pins if while loop is broken
-            self.__closeGPIOs__()
-
-        # Catch if server connection fails during data transmission
-        except BrokenPipeError:
-            self.__closeGPIOs__()
-            self.pipeCheck.set(True)       # Triggers callback in main GUI to safely handle broken pipe errors
+            # Triggers callback in PiNE_master to safely handle broken pipe errors
+            self.pipeCheck.set(True)
 
     # Close GPIOs if program closes unexpectedly
     def __closeGPIOs__(self):

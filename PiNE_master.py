@@ -153,9 +153,6 @@ class PiNeMain(GUIaes):
         # Display status message
         self.labelMess.config(text='Establishing connection...', foreground=super().__colourText__)
 
-        # Enable stop button
-        self.stopButton.config(state=NORMAL)
-
         # Start countdown on separate thread
         self.cont = True
         self.threadCountdown = threading.Thread(target=self.__countdown__)
@@ -171,28 +168,14 @@ class PiNeMain(GUIaes):
     # Initiate stop sequence if system has started running
     def __initStop_callback__(self):
 
-        # Stop countdown if still running (also safely ends the thread)
-        self.cont = False
-
         # Stop UDP transmission
         if hasattr(self, 'triggerSend'):
             self.triggerSend.cancel = True
+            time.sleep(1)
 
-        time.sleep(1)
+        # Provide message
+        self.labelMess.config(text='Connection stopped by user.', foreground=super().__colourText__)
 
-        # Destroy countdown and delete label message text
-        if hasattr(self, 'countdownMess'):               # May have been destroyed during threading beforehand
-            self.countdownMess.destroy()
-        self.labelMess.config(text='', foreground=super().__colourText__)
-
-        # # Close open socket (if established)
-        # if self.sock is not None:
-        #     try:
-        #         self.sock.shutdown(socket.SHUT_RDWR)    # Fail-safe in case server has been shut down first
-        #     except OSError:
-        #         pass
-        #     self.sock.close()
-        #     self.sock = None
         # Disable stop button
         self.stopButton.config(state=DISABLED)
 
@@ -254,8 +237,15 @@ class PiNeMain(GUIaes):
 
     # Process to deal with closing safely when unexpected broken pipe occurs
     def __pipeBreakSafe__(self, *_):
-        self.__initStop_callback__()
+
+        # Provide message
         self.labelMess.config(text='Connection Lost. Check server & retry.', foreground=super().__colourText__)
+
+        # Disable stop button
+        self.stopButton.config(state=DISABLED)
+
+        # Enable run button
+        self.runButton.config(state=NORMAL)
 
     # Perform a countdown while establishing connection (until externally cancelled)
     def __countdown__(self):
@@ -268,7 +258,7 @@ class PiNeMain(GUIaes):
 
         stTime = self.__sockTimeout__
         t = stTime
-        while (t >= 0) & self.cont:
+        while (t > 0) & self.cont:
             self.countdownMess.config(text=str(t))
             time.sleep(1)
             t -= 1
@@ -278,7 +268,7 @@ class PiNeMain(GUIaes):
 
         # Initialise socket and set up timeout limit for connecting
         self.sock = socket.socket()
-        self.sock.settimeout(self.__sockTimeout__+1)
+        self.sock.settimeout(self.__sockTimeout__)
 
         try:
             self.sock.connect((self.__host__, self.__port__))
@@ -344,6 +334,9 @@ class PiNeMain(GUIaes):
                                    LEDduration=self.__LEDduration__)
         self.threadTrigg = threading.Thread(target=self.triggerSend)
         self.threadTrigg.start()
+
+        # Enable stop button
+        self.stopButton.config(state=NORMAL)
 
 
 # Initialise and run tkinter loop
