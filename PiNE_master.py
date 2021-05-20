@@ -41,9 +41,12 @@ class PiNeMain(GUIaes):
         self.window.geometry('800x480')
         self.window.resizable(0, 0)
         self.window.title(f'PiNe v{self.ver}')
+        self.window.overrideredirect(True)
+        self.window.overrideredirect(False)
 
         self.cont = False
         self.sock = None
+        self.sockInitEnd = False
         self.__sockTimeout__ = 9  # Allow 9s to connect to IP otherwise throw exception
 
     # Initialize the system
@@ -118,22 +121,26 @@ class PiNeMain(GUIaes):
 
         # Add RUN button
         self.runImage = super().__renderImageOnly__(50, 50, 'start_icon_grey.png')
-        self.runButton = Button(self.buttonFrame, image=self.runImage,
+        self.runImageFaded = super().__renderImageOnly__(50, 50, 'start_icon_faded.png')
+        self.runButton = Button(self.buttonFrame, image=self.runImage, relief=FLAT,
                                 compound=LEFT,  highlightthickness=0, borderwidth=0, highlightbackground='black',
                                 command=self.__initSocket_callback__)
         self.runButton.pack(side=LEFT, padx=4)
 
         # Add STOP/RESET button
         self.stopImage = super().__renderImageOnly__(50, 50, 'stop_icon_grey.png')
-        self.stopButton = Button(self.buttonFrame, image=self.stopImage, compound=LEFT,  highlightthickness=0,
-                                 borderwidth=0, highlightbackground='black', state=DISABLED,
+        self.stopImageFaded = super().__renderImageOnly__(50, 50, 'stop_icon_faded.png')
+        self.stopButton = Button(self.buttonFrame, image=self.stopImageFaded, compound=LEFT,  highlightthickness=0,
+                                 borderwidth=0, highlightbackground='black', state=DISABLED, relief=FLAT,
                                  command=self.__initStop_callback__)
         self.stopButton.pack(side=LEFT, padx=4)
 
         # Add QUIT button
         self.quitImage = super().__renderImageOnly__(50, 50, 'quit_icon_grey.png')
+        self.quitImageFaded = super().__renderImageOnly__(50, 50, 'quit_icon_faded.png')
         self.quitButton = Button(self.buttonFrame, image=self.quitImage, compound=LEFT,  highlightthickness=0,
-                                 borderwidth=0, highlightbackground='black', command=self.__initQuit_callback__)
+                                 borderwidth=0, highlightbackground='black', command=self.__initQuit_callback__,
+                                 relief=FLAT)
         self.quitButton.pack(side=LEFT, padx=4)
 
         # Set the broken pipe error check
@@ -147,28 +154,32 @@ class PiNeMain(GUIaes):
     # Initiate socket connection on selecting Run callback
     def __initSocket_callback__(self):
 
-        # Disable run button to avoid initialising multiple threads
-        self.runButton.config(state=DISABLED)
+        # Disable run button to avoid user initialising multiple threads
+        self.runButton.config(state=DISABLED, image=self.runImageFaded)
+
+        # Disable quit button to avoid forcing multi-thread shutdown
+        self.quitButton.config(state=DISABLED, image=self.quitImageFaded)
+
+        self.sockInitEnd = False
 
         # Display status message
         self.labelMess.config(text='Establishing connection...', foreground=super().__colourText__)
 
-        # Start countdown on separate thread
+        # Start countdown on separate first thread
         self.cont = True
         self.threadCountdown = threading.Thread(target=self.__countdown__)
         self.threadCountdown.start()
 
-        # Initialize socket connection and check if successful (thread)
+        # Initialize socket connection and check if successful (second thread)
         self.__host__ = self.varIP.get()
         self.__port__ = int(self.varPort.get())
-
         self.threadSock = threading.Thread(target=self.__initSocket__)
         self.threadSock.start()
 
     # Initiate stop sequence if system has started running
     def __initStop_callback__(self):
 
-        # Stop UDP transmission
+        # Stop UDP transmission thread
         if hasattr(self, 'triggerSend'):
             self.triggerSend.cancel = True
             time.sleep(1)
@@ -177,14 +188,26 @@ class PiNeMain(GUIaes):
         self.labelMess.config(text='Connection stopped by user.', foreground=super().__colourText__)
 
         # Disable stop button
-        self.stopButton.config(state=DISABLED)
+        self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
 
         # Enable run button
-        self.runButton.config(state=NORMAL)
+        self.runButton.config(state=NORMAL, image=self.runImage)
+
+        # Enable quit button
+        self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+    # Query user quit window
+    def __initQuit_callback__(self):
+        self.__initShutDown_callback__()
 
     # Initiate quit sequence
-    def __initQuit_callback__(self):
-        pass
+    @staticmethod
+    def __initShutDown_callback__():
+
+        if (platform.system() == 'Darwin') | ((platform.system() == 'Linux') | (platform.system() == 'Windows')):
+            sys.exit()  # Just close the Python program
+        else:
+            os.system('sudo shutdown -h now')
 
     # ####### METHODS
     # Loads a setup file and sets various properties for the GUI to use and connect to socket
@@ -199,7 +222,7 @@ class PiNeMain(GUIaes):
             self.varIP.set('-')
             self.varPort.set('-')
             self.labelMess.config(text='Error with LOGIC state in setup.txt', foreground=super().__colourText__)
-            self.runButton.config(state=DISABLED)
+            self.runButton.config(state=DISABLED, image=self.runImageFaded)
             return
 
         # Load LED duration value
@@ -210,7 +233,7 @@ class PiNeMain(GUIaes):
             self.varIP.set('-')
             self.varPort.set('-')
             self.labelMess.config(text='Error with LEDduration in setup.txt', foreground=super().__colourText__)
-            self.runButton.config(state=DISABLED)
+            self.runButton.config(state=DISABLED, image=self.runImageFaded)
             return
 
         # Load default IP address
@@ -221,7 +244,7 @@ class PiNeMain(GUIaes):
             self.varIP.set('-')
             self.varPort.set('-')
             self.labelMess.config(text='Error with IP address in setup.txt', foreground=super().__colourText__)
-            self.runButton.config(state=DISABLED)
+            self.runButton.config(state=DISABLED, image=self.runImageFaded)
             return
 
         # Load default IP address
@@ -232,20 +255,23 @@ class PiNeMain(GUIaes):
             self.varIP.set('-')
             self.varPort.set('-')
             self.labelMess.config(text='Error with PORT value in setup.txt', foreground=super().__colourText__)
-            self.runButton.config(state=DISABLED)
+            self.runButton.config(state=DISABLED, image=self.runImageFaded)
             return
 
     # Process to deal with closing safely when unexpected broken pipe occurs
     def __pipeBreakSafe__(self, *_):
 
         # Provide message
-        self.labelMess.config(text='Connection Lost. Check server connection.', foreground=super().__colourText__)
+        self.labelMess.config(text='Connection lost. Check server connection.', foreground=super().__colourText__)
 
         # Disable stop button
-        self.stopButton.config(state=DISABLED)
+        self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
 
         # Enable run button
-        self.runButton.config(state=NORMAL)
+        self.runButton.config(state=NORMAL, image=self.runImage)
+
+        # Enable quit button
+        self.quitButton.config(state=NORMAL, image=self.quitImage)
 
     # Perform a countdown while establishing connection (until externally cancelled)
     def __countdown__(self):
@@ -282,13 +308,16 @@ class PiNeMain(GUIaes):
 
             # Destroy countdown and change label message text to unsuccessful
             self.countdownMess.destroy()
-            self.labelMess.config(text='Connection Timed Out.', foreground=super().__colourText__)
+            self.labelMess.config(text='Connection timed out.', foreground=super().__colourText__)
 
             # Disable stop button
-            self.stopButton.config(state=DISABLED)
+            self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
 
             # Enable run button
-            self.runButton.config(state=NORMAL)
+            self.runButton.config(state=NORMAL, image=self.runImage)
+
+            # Enable quit button
+            self.quitButton.config(state=NORMAL, image=self.quitImage)
 
             return
 
@@ -301,17 +330,20 @@ class PiNeMain(GUIaes):
 
             # Destroy countdown and change label message text to unsuccessful
             self.countdownMess.destroy()
-            self.labelMess.config(text='Connection Refused.', foreground=super().__colourText__)
+            self.labelMess.config(text='Connection refused.', foreground=super().__colourText__)
 
             # Disable stop button
-            self.stopButton.config(state=DISABLED)
+            self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
 
             # Enable run button
-            self.runButton.config(state=NORMAL)
+            self.runButton.config(state=NORMAL, image=self.runImage)
+
+            # Enable quit button
+            self.quitButton.config(state=NORMAL, image=self.quitImage)
 
             return
 
-        # Occurs if specifi choice of IP or port is only permitted by sudo users.
+        # Occurs if specific choice of IP or port is only permitted by sudo users
         except PermissionError:
 
             # Stop countdown and reset
@@ -320,19 +352,22 @@ class PiNeMain(GUIaes):
 
             # Destroy countdown and change label message text to unsuccessful
             self.countdownMess.destroy()
-            self.labelMess.config(text='Permission Denied.', foreground=super().__colourText__)
+            self.labelMess.config(text='Permission denied.', foreground=super().__colourText__)
 
             # Disable stop button
-            self.stopButton.config(state=DISABLED)
+            self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
 
             # Enable run button
-            self.runButton.config(state=NORMAL)
+            self.runButton.config(state=NORMAL, image=self.runImage)
+
+            # Enable quit button
+            self.quitButton.config(state=NORMAL, image=self.quitImage)
 
             return
 
         # General exception for other errors (send general error message and log error for debugging)
 
-        # If connection successful, system then can only be exited by stop button callback
+        # #### If connection successful, system then can only be exited by stop button callback
         # Stop countdown if still running
         self.cont = False
         time.sleep(1)
@@ -357,7 +392,10 @@ class PiNeMain(GUIaes):
         self.threadTrigg.start()
 
         # Enable stop button
-        self.stopButton.config(state=NORMAL)
+        self.stopButton.config(state=NORMAL, image=self.stopImage)
+
+        # Disable quit button
+        self.quitButton.config(state=DISABLED, image=self.quitImageFaded)
 
 
 # Initialise and run tkinter loop
