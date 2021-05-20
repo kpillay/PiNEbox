@@ -158,7 +158,7 @@ class PiNeMain(GUIaes):
         self.threadCountdown = threading.Thread(target=self.__countdown__)
         self.threadCountdown.start()
 
-        # Initialize socket connection and check if successful
+        # Initialize socket connection and check if successful (thread)
         self.__host__ = self.varIP.get()
         self.__port__ = int(self.varPort.get())
 
@@ -198,7 +198,7 @@ class PiNeMain(GUIaes):
         else:
             self.varIP.set('-')
             self.varPort.set('-')
-            self.labelMess.config(text='Fatal Error: LOGIC state in setup.txt', foreground=super().__colourText__)
+            self.labelMess.config(text='Error with LOGIC state in setup.txt', foreground=super().__colourText__)
             self.runButton.config(state=DISABLED)
             return
 
@@ -209,7 +209,7 @@ class PiNeMain(GUIaes):
         else:
             self.varIP.set('-')
             self.varPort.set('-')
-            self.labelMess.config(text='Fatal Error: LEDduration in setup.txt', foreground=super().__colourText__)
+            self.labelMess.config(text='Error with LEDduration in setup.txt', foreground=super().__colourText__)
             self.runButton.config(state=DISABLED)
             return
 
@@ -220,7 +220,7 @@ class PiNeMain(GUIaes):
         else:
             self.varIP.set('-')
             self.varPort.set('-')
-            self.labelMess.config(text='Fatal Error: IP address in setup.txt', foreground=super().__colourText__)
+            self.labelMess.config(text='Error with IP address in setup.txt', foreground=super().__colourText__)
             self.runButton.config(state=DISABLED)
             return
 
@@ -231,7 +231,7 @@ class PiNeMain(GUIaes):
         else:
             self.varIP.set('-')
             self.varPort.set('-')
-            self.labelMess.config(text='Fatal Error: PORT value in setup.txt', foreground=super().__colourText__)
+            self.labelMess.config(text='Error with PORT value in setup.txt', foreground=super().__colourText__)
             self.runButton.config(state=DISABLED)
             return
 
@@ -239,7 +239,7 @@ class PiNeMain(GUIaes):
     def __pipeBreakSafe__(self, *_):
 
         # Provide message
-        self.labelMess.config(text='Connection Lost. Check server & retry.', foreground=super().__colourText__)
+        self.labelMess.config(text='Connection Lost. Check server connection.', foreground=super().__colourText__)
 
         # Disable stop button
         self.stopButton.config(state=DISABLED)
@@ -310,6 +310,27 @@ class PiNeMain(GUIaes):
             self.runButton.config(state=NORMAL)
 
             return
+
+        # Occurs if specifi choice of IP or port is only permitted by sudo users.
+        except PermissionError:
+
+            # Stop countdown and reset
+            self.cont = False
+            time.sleep(1)
+
+            # Destroy countdown and change label message text to unsuccessful
+            self.countdownMess.destroy()
+            self.labelMess.config(text='Permission Denied.', foreground=super().__colourText__)
+
+            # Disable stop button
+            self.stopButton.config(state=DISABLED)
+
+            # Enable run button
+            self.runButton.config(state=NORMAL)
+
+            return
+
+        # General exception for other errors (send general error message and log error for debugging)
 
         # If connection successful, system then can only be exited by stop button callback
         # Stop countdown if still running
