@@ -58,6 +58,8 @@ class PiNeRun:
                     time.sleep(self.LEDduration)
                     self.ledButton.off()
 
+                    time.sleep(1)
+
                 # PinPrick event
                 elif self.inputPinPrick.is_pressed:
                     MESS = 'PinPrick'
@@ -65,6 +67,7 @@ class PiNeRun:
                     self.ledPinPrick.on()
                     time.sleep(self.LEDduration)
                     self.ledPinPrick.off()
+                    time.sleep(1)
 
                 # Visual event
                 elif self.inputVisual.is_pressed:
@@ -73,6 +76,7 @@ class PiNeRun:
                     self.ledVisual.on()
                     time.sleep(self.LEDduration)
                     self.ledVisual.off()
+                    time.sleep(1)
 
                 # Audio event
                 elif self.inputAudio.is_pressed:
@@ -81,6 +85,7 @@ class PiNeRun:
                     self.ledAudio.on()
                     time.sleep(self.LEDduration)
                     self.ledAudio.off()
+                    time.sleep(1)
 
                 # Heellance event
                 elif self.inputLance.is_pressed:
@@ -89,6 +94,7 @@ class PiNeRun:
                     self.ledLance.on()
                     time.sleep(self.LEDduration)
                     self.ledLance.off()
+                    time.sleep(1)
 
                 # Force event
                 elif self.inputForce.is_pressed:
@@ -97,6 +103,7 @@ class PiNeRun:
                     self.ledForce.on()
                     time.sleep(self.LEDduration)
                     self.ledForce.off()
+                    time.sleep(1)
 
             # Close GPIO pins if while loop is broken
             self.__closeGPIOs__()
