@@ -1,7 +1,7 @@
 """
 General class containing specific GUI aesthetics variables to be inherited by the main GUI call
 
-Kirubin Pillay, Maria Cobo 30.12.2020
+Maria Cobo, Kirubin Pillay 30.12.2020
 
 """
 from tkinter import *
@@ -20,7 +20,7 @@ class GUIaes:
     __textFont__ = 'Open Sans'
     __titleFontSize__ = 30
     __HeadFontSize__ = 24
-    __subHeadFontSize__ = 14
+    __subHeadFontSize__ = 20
     __helpFontSize__ = 12
     __textFontSize__ = 12
     __frameBgColour__ = '#504f51'
@@ -52,3 +52,41 @@ class GUIaes:
         self.imageOnCanvas = self.canvas_for_image.create_image(0, 0, image=self.imageResized, anchor='nw')
         self.canvas_for_image.itemconfig(self.imageOnCanvas, image=self.imageResized)
         self.canvas_for_image.pack(anchor='nw', pady=(50, 1))
+
+    # Center the specified popup window
+    @staticmethod
+    def __center__(master, w, h, ws, hs, xrel, yrel):
+        """
+        Center a tkinter Toplevel window based on relative screen and GUI dimensions.
+
+        :param tkinter.Toplevel master: Tkinter Toplevel window to centralize
+        :param int w: Width of Toplevel window
+        :param int h: Height of Toplevel window
+        :param int ws: Width of screen
+        :param int hs: Height of screen
+        :param int xrel: Relative horizontal shift of GUI relative to user's screen(s)
+        :param int yrel: Relative vertical shift of GUI relative to user's screen(s)
+        :return: None
+        """
+
+        x = xrel + (ws // 2) - (w // 2)
+        y = yrel + (hs // 2) - (h // 2)
+        master.geometry('+%d+%d' % (x, y))
+
+    # Common settings to embed any popup window
+    @staticmethod
+    def __popupWindow__(master, freezeFlag=True):
+        """
+        Method to change popup window settings and priorities (e.g. freeze background, shift window focus etc.)
+
+        :param tkinter.Toplevel master: Tkinter Toplevel window
+        :param bool freezeFlag: If True, will additionally keep this Toplevel window on top of other windows
+            and freeze their functionality until user addresses the Toplevel window.
+        :return: None
+        """
+
+        master.overrideredirect(1)
+        master.overrideredirect(0)
+        if freezeFlag:
+            master.grab_set()
+            master.attributes('-topmost', 'true')

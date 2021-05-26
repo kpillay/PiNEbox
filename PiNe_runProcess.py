@@ -15,14 +15,16 @@ from gpiozero import LED, Button
 from signal import pause
 
 
+# #### CLASS to initialise the generak trigger sending procedure ###### ###### ###### ###### ###### ###### ######
 class PiNeRun:
 
     # Init. variables
-    def __init__(self, sock, pipeCheck, logicState='HIGH', LEDduration=0.3):
+    def __init__(self, sock, pipeCheck, unknownSockCheck, logicState='HIGH', LEDduration=0.3):
 
         # Set input variables to properties
         self.sock = sock
         self.pipeCheck = pipeCheck
+        self.unknownSockCheck = unknownSockCheck
         self.logicState = True if logicState == 'HIGH' else False    # 'HIGH' is negative logic, 'LOW' is postive logic
         self.LEDduration = LEDduration
 
@@ -38,17 +40,23 @@ class PiNeRun:
         self.ledForce = LED(20)             # Force
 
         # Set read-in GPIO pins to check for triggers (uses Button module)
-        self.inputButton = Button(17, pull_up=self.logicState, bounce_time=1)       # Push-button
-        self.inputPinPrick = Button(24, pull_up=self.logicState)                    # PinPrick
-        self.inputVisual = Button(25, pull_up=self.logicState)                      # Visual
-        self.inputAudio = Button(5, pull_up=self.logicState)                        # Audio
-        self.inputLance = Button(6, pull_up=self.logicState)                        # Lance
-        self.inputForce = Button(16, pull_up=self.logicState)                       # Force
+        self.inputButton = Button(17, pull_up=self.logicState, bounce_time=0.5)       # Push-button
+        self.inputPinPrick = Button(24, pull_up=self.logicState)                      # PinPrick
+        self.inputVisual = Button(25, pull_up=self.logicState)                        # Visual
+        self.inputAudio = Button(5, pull_up=self.logicState)                          # Audio
+        self.inputLance = Button(6, pull_up=self.logicState)                          # Lance
+        self.inputForce = Button(16, pull_up=self.logicState)                         # Force
 
-    # Threaded function to run the main trigger send/recieve from the PiNe box
+    # Run the main trigger send/recieve from the PiNe box
     def __call__(self):
+
         # try:
         self.inputButton.when_pressed = lambda: act_PushButton
+        self.inputPinPrick.when_pressed = lambda: act_PinPrick
+        self.inputVisual.when_pressed = lambda: act_Visual
+        self.inputAudio.when_pressed = lambda: act_Audio
+        self.inputLance.when_pressed = lambda: act_Lance
+        self.inputForce.when_pressed = lambda: act_Force
 
         pause()
 
@@ -140,13 +148,14 @@ class PiNeRun:
 
         # General exception for other errors (send general error message and log error for debugging)
 
+    # ####### CALLBACKS ####### ####### ####### ####### ####### ####### ####### ####### ####### ####### ####### #######
     # Callback to perform push button activation protocol
     def act_PushButton(self):
         try:
             MESS = 'PushButton'
             self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
 
-            # Flash the LEDs then pause to avoid over-triggering
+            # Flash the LEDs
             self.ledButton.on()
             time.sleep(self.LEDduration)
             self.ledButton.off()
@@ -154,11 +163,103 @@ class PiNeRun:
         except BrokenPipeError:
             self.pipeCheck_protocol()
 
+        except Exception as inst:
+            self.logger.exception(inst)
+            self.unknownSocket_protocol()
+
+    # Callback to perform PinPrick activation protocol
+    def act_PinPrick(self):
+        try:
+            MESS = 'PinPrick'
+            self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
+
+            # Flash the LEDs
+            self.ledPinPrick.on()
+            time.sleep(self.LEDduration)
+            self.ledPinPrick.off()
+
+        except BrokenPipeError:
+            self.pipeCheck_protocol()
+
+        except Exception as inst:
+            self.logger.exception(inst)
+            self.unknownSocket_protocol()
+
+    # Callback to perform Visual activation protocol
+    def act_Visual(self):
+        try:
+            MESS = 'Visual'
+            self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
+
+            # Flash the LEDs
+            self.ledVisual.on()
+            time.sleep(self.LEDduration)
+            self.ledVisual.off()
+
+        except BrokenPipeError:
+            self.pipeCheck_protocol()
+
+        except Exception as inst:
+            self.logger.exception(inst)
+            self.unknownSocket_protocol()
+
+    # Callback to perform Audio activation protocol
+    def act_Audio(self):
+        try:
+            MESS = 'Audio'
+            self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
+
+            # Flash the LEDs
+            self.ledAudio.on()
+            time.sleep(self.LEDduration)
+            self.ledAudio.off()
+
+        except BrokenPipeError:
+            self.pipeCheck_protocol()
+
+        except Exception as inst:
+            self.logger.exception(inst)
+            self.unknownSocket_protocol()
+
+    # Callback to perform Lance activation protocol
+    def act_Lance(self):
+        try:
+            MESS = 'Lance'
+            self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
+
+            # Flash the LEDs
+            self.ledLance.on()
+            time.sleep(self.LEDduration)
+            self.ledLance.off()
+
+        except BrokenPipeError:
+            self.pipeCheck_protocol()
+
+        except Exception as inst:
+            self.logger.exception(inst)
+            self.unknownSocket_protocol()
+
+    # ####### METHODS ####### ####### ####### ####### ####### ####### ####### ####### ####### ####### ####### #######
+    # Callback to perform Force activation protocol
+    def act_Force(self):
+        try:
+            MESS = 'Force'
+            self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
+
+            # Flash the LEDs
+            self.ledForce.on()
+            time.sleep(self.LEDduration)
+            self.ledForce.off()
+
+        except BrokenPipeError:
+            self.pipeCheck_protocol()
+
+        except Exception as inst:
+            self.logger.exception(inst)
+            self.unknownSocket_protocol()
+
     # Perform standardized setup to escape due to broken pipe
     def pipeCheck_protocol(self):
-
-        # Close GPIO pins
-        self.__closeGPIOs__()
 
         # Close open socket (if established)
         try:
@@ -168,8 +269,28 @@ class PiNeRun:
         self.sock.close()
         self.sock = None
 
+        # Close GPIO pins
+        self.__closeGPIOs__()
+
         # Triggers callback in PiNE_master to safely handle broken pipe errors
         self.pipeCheck.set(True)
+
+    # Perform standardized setup to escape due to an unknown error
+    def unknownSocket_protocol(self):
+
+        # Close open socket (if established)
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+        self.sock.close()
+        self.sock = None
+
+        # Close GPIO pins
+        self.__closeGPIOs__()
+
+        # Triggers callback in PiNE_master to safely handle these errors
+        self.unknownSockCheck.set(True)
 
     # Close GPIOs explicitly if program closes unexpectedly
     def __closeGPIOs__(self):
