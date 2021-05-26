@@ -59,7 +59,7 @@ class PiNeMain(GUIaes):
         self.window.iconphoto(False, __p1__)
 
         # Override default close option
-        self.window.protocol('WM_DELETE_WINDOW', self.__initQuit_callback__)
+        self.window.protocol('WM_DELETE_WINDOW', self.__initClose_callback__)
 
         # ####### CONSTRUCT TKINTER GUI
         self.frame1 = tk.Frame(self.window, bg=super().__frameBgColour__)
@@ -144,6 +144,10 @@ class PiNeMain(GUIaes):
                                  borderwidth=0, highlightbackground='black', command=self.__initQuit_callback__,
                                  relief=FLAT)
         self.quitButton.pack(side=LEFT, padx=4)
+
+        # Load other images for later use
+        self.yesImage = super().__renderImageOnly__(50, 50, 'yes_icon_grey.png')
+        self.noImage = super().__renderImageOnly__(50, 50, 'no_icon_grey.png')
 
         # Set the broken pipe error check
         self.pipeCheck = tk.BooleanVar(False)
@@ -240,7 +244,8 @@ class PiNeMain(GUIaes):
         self.quitWindow.title('PiNe shutdown')
 
         # Create text label
-        self.quitText = Label(self.quitWindow, bg=super().__frameBgColour__, text='Quit & Shutdown PiNe?',
+        self.quitText = Label(self.quitWindow, bg=super().__frameBgColour__, text='Close application & shut down '
+                                                                                  'PiNe box?',
                               fg=super().__colourText__, font=(super().__textFont__, super().__HeadFontSize__))
         self.quitText.pack(side=TOP, fill=BOTH, expand=TRUE)
 
@@ -249,14 +254,12 @@ class PiNeMain(GUIaes):
         self.quitButtons.pack(side=TOP)
 
         # Add YES button to frame
-        self.yesImage = super().__renderImageOnly__(50, 50, 'yes_icon_grey.png')
         self.yesButton = Button(self.quitButtons, image=self.yesImage, relief=FLAT,
                                 compound=LEFT, highlightthickness=0, borderwidth=0, highlightbackground='black',
                                 command=self.__yesCallback__)
         self.yesButton.pack(side=LEFT, padx=4, pady=4)
 
         # Add NO button to frame
-        self.noImage = super().__renderImageOnly__(50, 50, 'no_icon_grey.png')
         self.noButton = Button(self.quitButtons, image=self.noImage, relief=FLAT,
                                compound=LEFT, highlightthickness=0, borderwidth=0, highlightbackground='black',
                                command=self.__noCallback__)
@@ -266,14 +269,64 @@ class PiNeMain(GUIaes):
         super().__center__(self.quitWindow, 600, 125, 800, 480, 0, 0)
         super().__popupWindow__(self.quitWindow, freezeFlag=True)
 
+    # Query user quit window
+    def __initClose_callback__(self):
+
+        # Open a TopLevel Window to check u
+        self.closeWindow = Toplevel(self.window, bg=super().__frameBgColour__, bd=1, relief=RAISED)
+        self.closeWindow.geometry('600x175')
+
+        # Create text label
+        self.closeText = Label(self.closeWindow, bg=super().__frameBgColour__, text='Close the PiNe application?',
+                               fg=super().__colourText__, font=(super().__textFont__, super().__HeadFontSize__))
+        self.closeText.pack(side=TOP, fill=BOTH, expand=TRUE)
+
+        # Create second smaller text label with safe shut down warning message
+        self.closeWarningText = Label(self.closeWindow, bg=super().__frameBgColour__, fg=super().__colourText__,
+                                      font=(super().__textFont__, super().__textFontSize__), wraplength=580,
+                                      text='WARNING: This will only close the application. '
+                                           'Ensure that you still safely shut down the PiNe box OS before '
+                                           'powering off at the switch.')
+        self.closeWarningText.pack(side=TOP, fill=BOTH, expand=TRUE)
+
+        # Create buttons frame
+        self.closeButtons = Frame(self.closeWindow, bg=super().__frameBgColour__)
+        self.closeButtons.pack(side=TOP)
+
+        # Add YES button to frame
+        self.yesCloseButton = Button(self.closeButtons, image=self.yesImage, relief=FLAT,
+                                     compound=LEFT, highlightthickness=0, borderwidth=0, highlightbackground='black',
+                                     command=self.__yesCloseCallback__)
+        self.yesCloseButton.pack(side=LEFT, padx=4, pady=4)
+
+        # Add NO button to frame
+        self.noButton = Button(self.closeButtons, image=self.noImage, relief=FLAT,
+                               compound=LEFT, highlightthickness=0, borderwidth=0, highlightbackground='black',
+                               command=self.__noCloseCallback__)
+        self.noButton.pack(side=LEFT, padx=4, pady=5)
+
+        # Center and 'freeze' the window in place
+        super().__center__(self.closeWindow, 600, 175, 800, 480, 0, 0)
+        super().__popupWindow__(self.closeWindow, freezeFlag=True)
+
     # Callback when the quit button shutdown is confirmed by user
     def __yesCallback__(self, *_):
         self.__initShutDown_callback__()
+
+    # Callback when the quit button shutdown is confirmed by user
+    @staticmethod
+    def __yesCloseCallback__(*_):
+        sys.exit()
 
     # Callback when the quit button shutdown is cancelled by user
     def __noCallback__(self, *_):
         self.quitWindow.grab_release()
         self.quitWindow.destroy()
+
+    # Callback when the quit button shutdown is cancelled by user
+    def __noCloseCallback__(self, *_):
+        self.closeWindow.grab_release()
+        self.closeWindow.destroy()
 
     # Initiate quit/shutdown sequence
     @staticmethod
@@ -405,7 +458,7 @@ class PiNeMain(GUIaes):
 
             # Stop countdown and reset
             self.cont = False
-            time.sleep(1)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
+            time.sleep(0.5)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
 
             # Destroy countdown and change label message text to unsuccessful
             self.countdownMess.destroy()
@@ -427,7 +480,7 @@ class PiNeMain(GUIaes):
 
             # Stop countdown and reset
             self.cont = False
-            time.sleep(1)
+            time.sleep(0.5)
 
             # Destroy countdown and change label message text to unsuccessful
             self.countdownMess.destroy()
@@ -449,7 +502,7 @@ class PiNeMain(GUIaes):
 
             # Stop countdown and reset
             self.cont = False
-            time.sleep(1)
+            time.sleep(0.5)
 
             # Destroy countdown and change label message text to unsuccessful
             self.countdownMess.destroy()
@@ -471,7 +524,7 @@ class PiNeMain(GUIaes):
 
             # Stop countdown and reset
             self.cont = False
-            time.sleep(1)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
+            time.sleep(0.5)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
 
             # Destroy countdown and change label message text to unsuccessful
             self.countdownMess.destroy()
@@ -494,7 +547,7 @@ class PiNeMain(GUIaes):
         # #### If connection successful, system then can only then be exited by stop button callback
         # Stop countdown if still running
         self.cont = False
-        time.sleep(1)
+        time.sleep(0.5)
 
         # Overwrite text file with new correct values (after first trying to open), otherwise catch error
         try:

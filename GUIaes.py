@@ -20,9 +20,7 @@ class GUIaes:
     __textFont__ = 'Open Sans'
     __titleFontSize__ = 30
     __HeadFontSize__ = 24
-    __subHeadFontSize__ = 20
-    __helpFontSize__ = 12
-    __textFontSize__ = 12
+    __textFontSize__ = 14
     __frameBgColour__ = '#504f51'
     __colourSubHead__ = '#808080'
     __colourText__ = '#f28e7c'
