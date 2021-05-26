@@ -12,6 +12,7 @@ import platform
 import socket
 import time
 from gpiozero import LED, Button
+from signal import pause
 
 
 class PiNeRun:
@@ -25,8 +26,8 @@ class PiNeRun:
         self.logicState = True if logicState == 'HIGH' else False    # 'HIGH' is negative logic, 'LOW' is postive logic
         self.LEDduration = LEDduration
 
-        # Set cancel state
-        self.cancel = False
+        # # Set cancel state
+        # self.cancel = False
 
         # Set GPIO pins to appropriate LEDs
         self.ledButton = LED(23)            # Push-button
@@ -46,94 +47,129 @@ class PiNeRun:
 
     # Threaded function to run the main trigger send/recieve from the PiNe box
     def __call__(self):
-        try:
-            while not self.cancel:
-                # Push-button event
-                if self.inputButton.is_pressed:
-                    MESS = 'PushButton'
-                    self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
+        # try:
+        self.inputButton.when_pressed = lambda: act_PushButton
 
-                    # Flash the LEDs
-                    self.ledButton.on()
-                    time.sleep(self.LEDduration)
-                    self.ledButton.off()
+        pause()
 
-                    time.sleep(1)
+        # while not self.cancel:
+        #
+        #     # Push-button event
+        #     if self.inputButton.is_pressed:
+        #         MESS = 'PushButton'
+        #         self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
+        #
+        #         # Flash the LEDs then pause to avoid over-triggering
+        #         self.ledButton.on()
+        #         time.sleep(self.LEDduration)
+        #         self.ledButton.off()
+        #         time.sleep(1)
+        #
+        #     # PinPrick event
+        #     elif self.inputPinPrick.is_pressed:
+        #         MESS = 'PinPrick'
+        #         self.sock.sendall(self.sendiXmess(MESS))
+        #         self.ledPinPrick.on()
+        #         time.sleep(self.LEDduration)
+        #         self.ledPinPrick.off()
+        #         time.sleep(1)
+        #
+        #     # Visual event
+        #     elif self.inputVisual.is_pressed:
+        #         MESS = 'Visual'
+        #         self.sock.sendall(self.sendiXmess(MESS))
+        #         self.ledVisual.on()
+        #         time.sleep(self.LEDduration)
+        #         self.ledVisual.off()
+        #         time.sleep(1)
+        #
+        #     # Audio event
+        #     elif self.inputAudio.is_pressed:
+        #         MESS = 'Audio'
+        #         self.sock.sendall(self.sendiXmess(MESS))
+        #         self.ledAudio.on()
+        #         time.sleep(self.LEDduration)
+        #         self.ledAudio.off()
+        #         time.sleep(1)
+        #
+        #     # Heellance event
+        #     elif self.inputLance.is_pressed:
+        #         MESS = 'Heellance'
+        #         self.sock.sendall(self.sendiXmess(MESS))
+        #         self.ledLance.on()
+        #         time.sleep(self.LEDduration)
+        #         self.ledLance.off()
+        #         time.sleep(1)
+        #
+        #     # Force event
+        #     elif self.inputForce.is_pressed:
+        #         MESS = 'Force'
+        #         self.sock.sendall(self.sendiXmess(MESS))
+        #         self.ledForce.on()
+        #         time.sleep(self.LEDduration)
+        #         self.ledForce.off()
+        #         time.sleep(1)
 
-                # PinPrick event
-                elif self.inputPinPrick.is_pressed:
-                    MESS = 'PinPrick'
-                    self.sock.sendall(self.sendiXmess(MESS))
-                    self.ledPinPrick.on()
-                    time.sleep(self.LEDduration)
-                    self.ledPinPrick.off()
-                    time.sleep(1)
-
-                # Visual event
-                elif self.inputVisual.is_pressed:
-                    MESS = 'Visual'
-                    self.sock.sendall(self.sendiXmess(MESS))
-                    self.ledVisual.on()
-                    time.sleep(self.LEDduration)
-                    self.ledVisual.off()
-                    time.sleep(1)
-
-                # Audio event
-                elif self.inputAudio.is_pressed:
-                    MESS = 'Audio'
-                    self.sock.sendall(self.sendiXmess(MESS))
-                    self.ledAudio.on()
-                    time.sleep(self.LEDduration)
-                    self.ledAudio.off()
-                    time.sleep(1)
-
-                # Heellance event
-                elif self.inputLance.is_pressed:
-                    MESS = 'Heellance'
-                    self.sock.sendall(self.sendiXmess(MESS))
-                    self.ledLance.on()
-                    time.sleep(self.LEDduration)
-                    self.ledLance.off()
-                    time.sleep(1)
-
-                # Force event
-                elif self.inputForce.is_pressed:
-                    MESS = 'Force'
-                    self.sock.sendall(self.sendiXmess(MESS))
-                    self.ledForce.on()
-                    time.sleep(self.LEDduration)
-                    self.ledForce.off()
-                    time.sleep(1)
-
-            # Close GPIO pins if while loop is broken
-            self.__closeGPIOs__()
-
-            # Close open socket (if established)
-            try:
-                self.sock.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
-            self.sock.close()
-            self.sock = None
+        # # Close GPIO pins if while loop is broken
+        # self.__closeGPIOs__()
+        #
+        # # Close open socket (if established)
+        # try:
+        #     self.sock.shutdown(socket.SHUT_RDWR)
+        # except OSError:
+        #     pass
+        # self.sock.close()
+        # self.sock = None
 
         # Catch if server connection fails during data transmission
-        except BrokenPipeError:
-
-            # Close GPIO pins
-            self.__closeGPIOs__()
-
-            # Close open socket (if established)
-            try:
-                self.sock.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
-            self.sock.close()
-            self.sock = None
-
-            # Triggers callback in PiNE_master to safely handle broken pipe errors
-            self.pipeCheck.set(True)
+        # except BrokenPipeError:
+        #
+        #     # Close GPIO pins
+        #     self.__closeGPIOs__()
+        #
+        #     # Close open socket (if established)
+        #     try:
+        #         self.sock.shutdown(socket.SHUT_RDWR)
+        #     except OSError:
+        #         pass
+        #     self.sock.close()
+        #     self.sock = None
+        #
+        #     # Triggers callback in PiNE_master to safely handle broken pipe errors
+        #     self.pipeCheck.set(True)
 
         # General exception for other errors (send general error message and log error for debugging)
+
+    # Callback to perform push button activation protocol
+    def act_PushButton(self):
+        try:
+            MESS = 'PushButton'
+            self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
+
+            # Flash the LEDs then pause to avoid over-triggering
+            self.ledButton.on()
+            time.sleep(self.LEDduration)
+            self.ledButton.off()
+
+        except BrokenPipeError:
+            self.pipeCheck_protocol()
+
+    # Perform standardized setup to escape due to broken pipe
+    def pipeCheck_protocol(self):
+
+        # Close GPIO pins
+        self.__closeGPIOs__()
+
+        # Close open socket (if established)
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+        self.sock.close()
+        self.sock = None
+
+        # Triggers callback in PiNE_master to safely handle broken pipe errors
+        self.pipeCheck.set(True)
 
     # Close GPIOs explicitly if program closes unexpectedly
     def __closeGPIOs__(self):

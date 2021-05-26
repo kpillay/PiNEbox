@@ -184,6 +184,17 @@ class PiNeMain(GUIaes):
             self.triggerSend.cancel = True
             time.sleep(1)
 
+        # Close GPIO pins if while loop is broken
+        self.triggerSend.__closeGPIOs__()
+
+        # Close open socket (if established)
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+        self.sock.close()
+        self.sock = None
+
         # Provide message
         self.labelMess.config(text='Connection stopped by user.', foreground=super().__colourText__)
 
