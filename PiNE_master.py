@@ -487,7 +487,7 @@ class PiNeMain(GUIaes):
 
                     # Create 'success' message label
                     self.countdownMess.destroy()
-                    self.labelMess.config(text=' Client connection successful.', foreground=super().__colourGood__)
+                    self.labelMess.config(text=' Connection successful.', foreground=super().__colourGood__)
 
                     # Send initial connection message
                     try:
