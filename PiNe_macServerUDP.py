@@ -6,7 +6,7 @@ This is a server scipt to open up a listening port on a macOS system.
 Based on the choice of host and port, this can be used to set up a listening server on a mac to feedback outputs
 directly from the PiNe box or for closed-loop software testing using the localhost.
 
-Kirubin Pillay 19/05/2020
+Kirubin Pillay 30/05/2020
 """
 
 import socket
@@ -17,8 +17,7 @@ PORT = 8000         # Port to listen on (non-privileged ports are > 1023) - same
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((HOST, PORT))
-# conn, addr = sock.accept()
-# print('Connected by', addr)
+
 while True:
     # data, addr = sock.recvfrom(1024)
     data = sock.recv(1024)
