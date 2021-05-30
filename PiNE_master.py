@@ -33,6 +33,7 @@ class PiNeMain(GUIaes):
         self.ver = ver
         self.releaseDate = releaseDate
         self.dev = dev
+        self.messType = 'UDP'
 
         # Check if code is being run on external OS off-Pi (for simulation), in which case set dummy GPIO pins
         if (platform.system() == 'Darwin') | ((platform.system() == 'Linux') | (platform.system() == 'Windows')):
@@ -447,146 +448,294 @@ class PiNeMain(GUIaes):
     def __initSocket__(self):
 
         # Initialise socket and set up timeout limit for connecting
-        self.sock = socket.socket()
-        self.sock.settimeout(self.__sockTimeout__)
+        if self.messType == 'UDP':
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.sock.settimeout(self.__sockTimeout__)
 
-        try:
-            self.sock.connect((self.__host__, self.__port__))
+            try:
 
-        # Occurs if a connection could not be established (often because IP or port is incorrect)
-        except socket.timeout:
+                # FOR UDP, PING CLIENT TO CHECK IF CONNECTED
+                response = os.system("ping -c 1 " + self.__host__)
 
-            # Stop countdown and reset
-            self.cont = False
-            time.sleep(0.5)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
+                # and then check the response...
+                if response == 0:
 
-            # Destroy countdown and change label message text to unsuccessful
-            self.countdownMess.destroy()
-            self.labelMess.config(text='Connection timed out.', foreground=super().__colourText__)
+                    # #### If connection successful, system then can only then be exited by stop button callback
+                    # Stop countdown if still running
+                    self.sock.connect((self.__host__, self.__port__))
+                    self.cont = False
+                    time.sleep(0.5)
 
-            # Disable stop button
-            self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+                    # Overwrite text file with new correct values (after first trying to open), otherwise catch error
+                    try:
+                        with open('setup.txt', 'w') as IPfile:
+                            IPfile.write(f'LOGIC={self.__logicState__}\nLEDduration={self.__LEDduration__}\n'
+                                         f'IP={self.varIP.get()}\nPORT={self.varPort.get()}')
 
-            # Enable run button
-            self.runButton.config(state=NORMAL, image=self.runImage)
+                    except Exception as inst:
+                        # Create 'success' message label
+                        self.countdownMess.destroy()
+                        self.labelMess.config(text='Problem with setup.txt. Check log.', foreground=super().__colourText__)
 
-            # Enable quit button
-            self.quitButton.config(state=NORMAL, image=self.quitImage)
+                        # Log unknown error
+                        self.logger.exception(inst)
 
-            return
+                        # Enable quit button
+                        self.quitButton.config(state=NORMAL, image=self.quitImage)
 
-        # Occurs if server is not listening at the specified port
-        except ConnectionRefusedError:
+                        return
 
-            # Stop countdown and reset
+                    # Create 'success' message label
+                    self.countdownMess.destroy()
+                    self.labelMess.config(text=' Client connection successful.', foreground=super().__colourGood__)
+
+                    # Send initial connection message
+                    try:
+                        initMess = 'c_PiNeConnected'
+                        self.sock.sendall(PiNeRun.sendiXmess(initMess))
+
+                    # Occurs if server is not listening at the specified port
+                    except ConnectionRefusedError:
+
+                        # Stop countdown and reset
+                        self.cont = False
+                        time.sleep(0.5)
+
+                        # Destroy countdown and change label message text to unsuccessful
+                        self.countdownMess.destroy()
+                        self.labelMess.config(text='Connection refused.', foreground=super().__colourText__)
+
+                        # Disable stop button
+                        self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                        # Enable run button
+                        self.runButton.config(state=NORMAL, image=self.runImage)
+
+                        # Enable quit button
+                        self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                        return
+
+                    # Occurs if specific choice of IP or port is only permitted by sudo users
+                    except PermissionError:
+
+                        # Stop countdown and reset
+                        self.cont = False
+                        time.sleep(0.5)
+
+                        # Destroy countdown and change label message text to unsuccessful
+                        self.countdownMess.destroy()
+                        self.labelMess.config(text='Permission denied.', foreground=super().__colourText__)
+
+                        # Disable stop button
+                        self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                        # Enable run button
+                        self.runButton.config(state=NORMAL, image=self.runImage)
+
+                        # Enable quit button
+                        self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                        return
+
+                    # Instantiate PiNeRun instance and begin trigger listening (threaded)
+                    self.triggerSend = PiNeRun(self.sock, self.pipeCheck, self.unknownSockCheck,
+                                               logicState=self.__logicState__,
+                                               LEDduration=self.__LEDduration__)
+                    self.threadTrigg = threading.Thread(target=self.triggerSend, daemon=True)
+                    self.threadTrigg.start()
+
+                    # Enable stop button
+                    self.stopButton.config(state=NORMAL, image=self.stopImage)
+
+                    # Disable quit button
+                    self.quitButton.config(state=DISABLED, image=self.quitImageFaded)
+
+                else:
+                    # Stop countdown and reset
+                    self.cont = False
+                    time.sleep(0.5)  # 'Hack' to ensure while loop in countdown is exited before destroying attributes
+
+                    # Destroy countdown and change label message text to unsuccessful
+                    self.countdownMess.destroy()
+                    self.labelMess.config(text='PING to client failed.', foreground=super().__colourText__)
+
+                    # Disable stop button
+                    self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                    # Enable run button
+                    self.runButton.config(state=NORMAL, image=self.runImage)
+
+                    # Enable quit button
+                    self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                    return
+
+            except Exception as inst:
+
+                # Stop countdown and reset
+                self.cont = False
+                time.sleep(0.5)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
+
+                # Destroy countdown and change label message text to unsuccessful
+                self.countdownMess.destroy()
+                self.labelMess.config(text='Unknown connection error. Check log.', foreground=super().__colourText__)
+
+                # Disable stop button
+                self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                # Enable run button
+                self.runButton.config(state=NORMAL, image=self.runImage)
+
+                # Enable quit button
+                self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                # Log unknown error
+                self.logger.exception(inst)
+
+                return
+
+        elif self.messType == 'TCP':
+            self.sock = socket.socket()
+            self.sock.settimeout(self.__sockTimeout__)
+
+            try:
+                self.sock.connect((self.__host__, self.__port__))
+
+            # Occurs if a connection could not be established (often because IP or port is incorrect)
+            except socket.timeout:
+
+                # Stop countdown and reset
+                self.cont = False
+                time.sleep(0.5)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
+
+                # Destroy countdown and change label message text to unsuccessful
+                self.countdownMess.destroy()
+                self.labelMess.config(text='Connection timed out.', foreground=super().__colourText__)
+
+                # Disable stop button
+                self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                # Enable run button
+                self.runButton.config(state=NORMAL, image=self.runImage)
+
+                # Enable quit button
+                self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                return
+
+            # Occurs if server is not listening at the specified port
+            except ConnectionRefusedError:
+
+                # Stop countdown and reset
+                self.cont = False
+                time.sleep(0.5)
+
+                # Destroy countdown and change label message text to unsuccessful
+                self.countdownMess.destroy()
+                self.labelMess.config(text='Connection refused.', foreground=super().__colourText__)
+
+                # Disable stop button
+                self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                # Enable run button
+                self.runButton.config(state=NORMAL, image=self.runImage)
+
+                # Enable quit button
+                self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                return
+
+            # Occurs if specific choice of IP or port is only permitted by sudo users
+            except PermissionError:
+
+                # Stop countdown and reset
+                self.cont = False
+                time.sleep(0.5)
+
+                # Destroy countdown and change label message text to unsuccessful
+                self.countdownMess.destroy()
+                self.labelMess.config(text='Permission denied.', foreground=super().__colourText__)
+
+                # Disable stop button
+                self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                # Enable run button
+                self.runButton.config(state=NORMAL, image=self.runImage)
+
+                # Enable quit button
+                self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                return
+
+            # General exception for other errors (send general error message and log error for debugging)
+            except Exception as inst:
+
+                # Stop countdown and reset
+                self.cont = False
+                time.sleep(0.5)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
+
+                # Destroy countdown and change label message text to unsuccessful
+                self.countdownMess.destroy()
+                self.labelMess.config(text='Unknown connection error. Check log.', foreground=super().__colourText__)
+
+                # Disable stop button
+                self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                # Enable run button
+                self.runButton.config(state=NORMAL, image=self.runImage)
+
+                # Enable quit button
+                self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                # Log unknown error
+                self.logger.exception(inst)
+
+                return
+
+            # #### If connection successful, system then can only then be exited by stop button callback
+            # Stop countdown if still running
             self.cont = False
             time.sleep(0.5)
 
-            # Destroy countdown and change label message text to unsuccessful
-            self.countdownMess.destroy()
-            self.labelMess.config(text='Connection refused.', foreground=super().__colourText__)
+            # Overwrite text file with new correct values (after first trying to open), otherwise catch error
+            try:
+                with open('setup.txt', 'w') as IPfile:
+                    IPfile.write(f'LOGIC={self.__logicState__}\nLEDduration={self.__LEDduration__}\n'
+                                 f'IP={self.varIP.get()}\nPORT={self.varPort.get()}')
 
-            # Disable stop button
-            self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+            except Exception as inst:
+                # Create 'success' message label
+                self.countdownMess.destroy()
+                self.labelMess.config(text='Problem with setup.txt. Check log.', foreground=super().__colourText__)
 
-            # Enable run button
-            self.runButton.config(state=NORMAL, image=self.runImage)
+                # Log unknown error
+                self.logger.exception(inst)
 
-            # Enable quit button
-            self.quitButton.config(state=NORMAL, image=self.quitImage)
+                # Enable quit button
+                self.quitButton.config(state=NORMAL, image=self.quitImage)
 
-            return
+                return
 
-        # Occurs if specific choice of IP or port is only permitted by sudo users
-        except PermissionError:
-
-            # Stop countdown and reset
-            self.cont = False
-            time.sleep(0.5)
-
-            # Destroy countdown and change label message text to unsuccessful
-            self.countdownMess.destroy()
-            self.labelMess.config(text='Permission denied.', foreground=super().__colourText__)
-
-            # Disable stop button
-            self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
-
-            # Enable run button
-            self.runButton.config(state=NORMAL, image=self.runImage)
-
-            # Enable quit button
-            self.quitButton.config(state=NORMAL, image=self.quitImage)
-
-            return
-
-        # General exception for other errors (send general error message and log error for debugging)
-        except Exception as inst:
-
-            # Stop countdown and reset
-            self.cont = False
-            time.sleep(0.5)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
-
-            # Destroy countdown and change label message text to unsuccessful
-            self.countdownMess.destroy()
-            self.labelMess.config(text='Unknown connection error. Check log.', foreground=super().__colourText__)
-
-            # Disable stop button
-            self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
-
-            # Enable run button
-            self.runButton.config(state=NORMAL, image=self.runImage)
-
-            # Enable quit button
-            self.quitButton.config(state=NORMAL, image=self.quitImage)
-
-            # Log unknown error
-            self.logger.exception(inst)
-
-            return
-
-        # #### If connection successful, system then can only then be exited by stop button callback
-        # Stop countdown if still running
-        self.cont = False
-        time.sleep(0.5)
-
-        # Overwrite text file with new correct values (after first trying to open), otherwise catch error
-        try:
-            with open('setup.txt', 'w') as IPfile:
-                IPfile.write(f'LOGIC={self.__logicState__}\nLEDduration={self.__LEDduration__}\n'
-                             f'IP={self.varIP.get()}\nPORT={self.varPort.get()}')
-
-        except Exception as inst:
             # Create 'success' message label
             self.countdownMess.destroy()
-            self.labelMess.config(text='Problem with setup.txt. Check log.', foreground=super().__colourText__)
+            self.labelMess.config(text='Connection successful.', foreground=super().__colourGood__)
 
-            # Log unknown error
-            self.logger.exception(inst)
+            # Send initial connection message
+            initMess = 'c_PiNeConnected'
+            self.sock.sendall(PiNeRun.sendiXmess(initMess))
 
-            # Enable quit button
-            self.quitButton.config(state=NORMAL, image=self.quitImage)
+            # Instantiate PiNeRun instance and begin trigger listening (threaded)
+            self.triggerSend = PiNeRun(self.sock, self.pipeCheck, self.unknownSockCheck, logicState=self.__logicState__,
+                                       LEDduration=self.__LEDduration__)
+            self.threadTrigg = threading.Thread(target=self.triggerSend, daemon=True)
+            self.threadTrigg.start()
 
-            return
+            # Enable stop button
+            self.stopButton.config(state=NORMAL, image=self.stopImage)
 
-        # Create 'success' message label
-        self.countdownMess.destroy()
-        self.labelMess.config(text='Connection successful.', foreground=super().__colourGood__)
-
-        # Send initial connection message
-        initMess = 'PiNeConnected'
-        self.sock.sendall(PiNeRun.sendiXmess(initMess))
-
-        # Instantiate PiNeRun instance and begin trigger listening (threaded)
-        self.triggerSend = PiNeRun(self.sock, self.pipeCheck, self.unknownSockCheck, logicState=self.__logicState__,
-                                   LEDduration=self.__LEDduration__)
-        self.threadTrigg = threading.Thread(target=self.triggerSend, daemon=True)
-        self.threadTrigg.start()
-
-        # Enable stop button
-        self.stopButton.config(state=NORMAL, image=self.stopImage)
-
-        # Disable quit button
-        self.quitButton.config(state=DISABLED, image=self.quitImageFaded)
+            # Disable quit button
+            self.quitButton.config(state=DISABLED, image=self.quitImageFaded)
 
 
 # Initialise and run tkinter loop

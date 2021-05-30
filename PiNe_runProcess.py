@@ -206,7 +206,7 @@ class PiNeRun:
     # Callback to perform Audio activation protocol
     def act_Audio(self):
         try:
-            MESS = 'Audio'
+            MESS = 'Auditory'
             self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
 
             # Flash the LEDs
@@ -224,7 +224,7 @@ class PiNeRun:
     # Callback to perform Lance activation protocol
     def act_Lance(self):
         try:
-            MESS = 'Lance'
+            MESS = 'Heellance'
             self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
 
             # Flash the LEDs
@@ -243,7 +243,7 @@ class PiNeRun:
     # Callback to perform Force activation protocol
     def act_Force(self):
         try:
-            MESS = 'Force'
+            MESS = 'Touch'
             self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
 
             # Flash the LEDs
