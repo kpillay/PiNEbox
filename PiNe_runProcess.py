@@ -40,12 +40,12 @@ class PiNeRun:
         self.ledForce = LED(20)             # Force
 
         # Set read-in GPIO pins to check for triggers (uses Button module)
-        self.inputButton = Button(17, pull_up=self.logicState, bounce_time=0.5)       # Push-button
-        self.inputPinPrick = Button(24, pull_up=self.logicState)                      # PinPrick
-        self.inputVisual = Button(25, pull_up=self.logicState)                        # Visual
-        self.inputAudio = Button(5, pull_up=self.logicState)                          # Audio
-        self.inputLance = Button(6, pull_up=self.logicState)                          # Lance
-        self.inputForce = Button(16, pull_up=self.logicState)                         # Force
+        self.inputButton = Button(6, pull_up=self.logicState, bounce_time=0.5)       # Push-button
+        self.inputPinPrick = Button(5, pull_up=self.logicState)                      # PinPrick
+        self.inputVisual = Button(25, pull_up=self.logicState)                       # Visual
+        self.inputAudio = Button(24, pull_up=self.logicState)                        # Audio
+        self.inputLance = Button(18, pull_up=self.logicState)                        # Lance
+        self.inputForce = Button(17, pull_up=self.logicState)                        # Force
 
     # Run the main trigger send/recieve from the PiNe box
     def __call__(self):
@@ -323,7 +323,7 @@ class PiNeRun:
         if hasattr(self, 'inputForce'):
             self.inputForce.close()        # Force
 
-    # Send an iXTrend-formatted message
+    # Send an iXTrend-formatted UDP message
     @staticmethod
     def sendiXmess(MESSAGE):
 

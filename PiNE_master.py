@@ -455,7 +455,10 @@ class PiNeMain(GUIaes):
             try:
 
                 # FOR UDP, PING CLIENT TO CHECK IF CONNECTED
-                response = os.system("ping -c 1 " + self.__host__)
+                if platform.system() == 'Windows':
+                    response = os.system("ping -n 1 " + self.__host__)
+                else:
+                    response = os.system("ping -c 1 " + self.__host__)
 
                 # and then check the response...
                 if response == 0:
@@ -463,6 +466,58 @@ class PiNeMain(GUIaes):
                     # #### If connection successful, system then can only then be exited by stop button callback
                     # Stop countdown if still running
                     self.sock.connect((self.__host__, self.__port__))
+
+                    # Send initial connection message
+                    try:
+                        initMess = 'c_PiNeConnected'
+                        self.sock.sendall(PiNeRun.sendiXmess(initMess))
+
+                    # Occurs if server is not listening at the specified port
+                    except ConnectionRefusedError:
+
+                        # Stop countdown and reset
+                        self.cont = False
+                        time.sleep(0.5)     # 'Hack' to ensure while loop in countdown is exited before changing label
+
+                        # Destroy countdown and change label message text to unsuccessful
+                        self.countdownMess.destroy()
+                        self.labelMess.config(text='Connection refused while sending.', foreground=super().__colourText__)
+
+                        # Disable stop button
+                        self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                        # Enable run button
+                        self.runButton.config(state=NORMAL, image=self.runImage)
+
+                        # Enable quit button
+                        self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                        return
+
+                    # Occurs if specific choice of IP or port is only permitted by sudo users
+                    except PermissionError:
+
+                        # Stop countdown and reset
+                        self.cont = False
+                        time.sleep(0.5)
+
+                        # Destroy countdown and change label message text to unsuccessful
+                        self.countdownMess.destroy()
+                        self.labelMess.config(text='Permission denied while sending.', foreground=super().__colourText__)
+
+                        # Disable stop button
+                        self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
+
+                        # Enable run button
+                        self.runButton.config(state=NORMAL, image=self.runImage)
+
+                        # Enable quit button
+                        self.quitButton.config(state=NORMAL, image=self.quitImage)
+
+                        return
+
+                    # #### If connection successful, system then can only then be exited by stop button callback
+                    # Stop countdown if still running
                     self.cont = False
                     time.sleep(0.5)
 
@@ -485,65 +540,16 @@ class PiNeMain(GUIaes):
 
                         return
 
-                    # Create 'success' message label
-                    self.countdownMess.destroy()
-                    self.labelMess.config(text=' Connection successful.', foreground=super().__colourGood__)
-
-                    # Send initial connection message
-                    try:
-                        initMess = 'c_PiNeConnected'
-                        self.sock.sendall(PiNeRun.sendiXmess(initMess))
-
-                    # Occurs if server is not listening at the specified port
-                    except ConnectionRefusedError:
-
-                        # Stop countdown and reset
-                        self.cont = False
-                        time.sleep(0.5)
-
-                        # Destroy countdown and change label message text to unsuccessful
-                        self.countdownMess.destroy()
-                        self.labelMess.config(text='Connection refused.', foreground=super().__colourText__)
-
-                        # Disable stop button
-                        self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
-
-                        # Enable run button
-                        self.runButton.config(state=NORMAL, image=self.runImage)
-
-                        # Enable quit button
-                        self.quitButton.config(state=NORMAL, image=self.quitImage)
-
-                        return
-
-                    # Occurs if specific choice of IP or port is only permitted by sudo users
-                    except PermissionError:
-
-                        # Stop countdown and reset
-                        self.cont = False
-                        time.sleep(0.5)
-
-                        # Destroy countdown and change label message text to unsuccessful
-                        self.countdownMess.destroy()
-                        self.labelMess.config(text='Permission denied.', foreground=super().__colourText__)
-
-                        # Disable stop button
-                        self.stopButton.config(state=DISABLED, image=self.stopImageFaded)
-
-                        # Enable run button
-                        self.runButton.config(state=NORMAL, image=self.runImage)
-
-                        # Enable quit button
-                        self.quitButton.config(state=NORMAL, image=self.quitImage)
-
-                        return
-
                     # Instantiate PiNeRun instance and begin trigger listening (threaded)
                     self.triggerSend = PiNeRun(self.sock, self.pipeCheck, self.unknownSockCheck,
                                                logicState=self.__logicState__,
                                                LEDduration=self.__LEDduration__)
                     self.threadTrigg = threading.Thread(target=self.triggerSend, daemon=True)
                     self.threadTrigg.start()
+
+                    # Create 'success' message label
+                    self.countdownMess.destroy()
+                    self.labelMess.config(text=' Connection successful.', foreground=super().__colourGood__)
 
                     # Enable stop button
                     self.stopButton.config(state=NORMAL, image=self.stopImage)
@@ -575,7 +581,7 @@ class PiNeMain(GUIaes):
 
                 # Stop countdown and reset
                 self.cont = False
-                time.sleep(0.5)       # 'Hack' to ensure while loop in countdown is exited before destroying attributes
+                time.sleep(0.5)
 
                 # Destroy countdown and change label message text to unsuccessful
                 self.countdownMess.destroy()
