@@ -45,11 +45,8 @@ class PiNeMain(GUIaes):
             Device.pin_factory = MockFactory()
 
         # Get dimensions
-        self.window.geometry('780x400')
+        self.window.geometry('795x470')
         self.window.update()
-        self.w = self.window.winfo_screenwidth()
-        self.h = self.window.winfo_screenheight()
-        print([self.w, self.h])
 
         self.window.report_callback_exception = self.__handleException_callback__
         threading.excepthook = self.__handleException_callback__
@@ -75,9 +72,9 @@ class PiNeMain(GUIaes):
         self.frame2 = tk.Frame(self.window, bg=super().__frameBgColour__)
         self.frame2.grid(row=0, column=1, sticky='nsew')
 
-        self.window.grid_rowconfigure(0, minsize=self.h, weight=1)
-        self.window.grid_columnconfigure(0, minsize=300)
-        self.window.grid_columnconfigure(1, minsize=500)
+        self.window.grid_rowconfigure(0, minsize=790, weight=1)
+        self.window.grid_columnconfigure(0, minsize=295)
+        self.window.grid_columnconfigure(1, minsize=495)
 
         # IP address label
         self.labelIP = tk.Label(self.frame1, bg=super().__frameBgColour__,
@@ -107,10 +104,13 @@ class PiNeMain(GUIaes):
                              highlightcolor=super().__frameBgColour__, bg=super().__colourText__,
                              highlightbackground=super().__frameBgColour__, borderwidth=0,
                              font=(super().__textFont__, super().__HeadFontSize__), fg=super().__frameBgColour__)
-        self.port.grid(row=2, column=0, padx=70, pady=(50, 5), sticky=W)
+        self.port.grid(row=2, column=0, padx=70, pady=(40, 5), sticky=W)
 
         # adding elements to frame2
+        # MAIN LOGO
         super().__renderLogo__(self.frame2)
+
+        # TEXT
         self.instr_text = Label(self.frame2, bg=super().__frameBgColour__,
                                 text=f'Released on {self.releaseDate} \n'
                                      f'Developed by {self.dev}',
@@ -126,7 +126,7 @@ class PiNeMain(GUIaes):
 
         # Add button frame
         self.buttonFrame = Frame(self.frame1, highlightthickness=0, borderwidth=0, background=super().__frameBgColour__)
-        self.buttonFrame.grid(row=5, column=0, padx=70, pady=(50, 5), sticky=W)
+        self.buttonFrame.grid(row=5, column=0, padx=70, pady=(40, 5), sticky=W)
 
         # Add RUN button
         self.runImage = super().__renderImageOnly__(50, 50, 'start_icon_grey.png')
@@ -343,6 +343,7 @@ class PiNeMain(GUIaes):
 
         # Try reading the setup file
         dirname = os.path.dirname(__file__)
+        print(dirname)
 
         try:
             IPfile = open(dirname + '/' + filename, 'r')
@@ -512,7 +513,10 @@ class PiNeMain(GUIaes):
 
                     # Overwrite text file with new correct values (after first trying to open), otherwise catch error
                     try:
-                        with open('setup.txt', 'w') as IPfile:
+                        # Try reading the setup file
+                        dirname = os.path.dirname(__file__)
+
+                        with open(dirname + '/' + 'setup.txt', 'w') as IPfile:
                             IPfile.write(f'LEDduration={self.__LEDduration__}\n'
                                          f'IP={self.varIP.get()}\nPORT={self.varPort.get()}')
 

@@ -19,7 +19,7 @@ class GUIaes:
     # Formatting variables
     __textFont__ = 'Open Sans'
     __titleFontSize__ = 30
-    __HeadFontSize__ = 24
+    __HeadFontSize__ = 20
     __textFontSize__ = 14
     __frameBgColour__ = '#504f51'
     __colourSubHead__ = '#808080'
@@ -43,13 +43,13 @@ class GUIaes:
 
     # Render the logo
     def __renderLogo__(self, master):
-        self.canvas_for_image = Canvas(master, height=int(180), width=int(420), borderwidth=0, highlightthickness=0,
+        self.canvas_for_image = Canvas(master, height=int(180), width=int(350), borderwidth=0, highlightthickness=0,
                                        bg='#504f51')
-        self.imageResized = ImageTk.PhotoImage(self.__imageLogo__.resize((int(420), int(180)), PIL.Image.ANTIALIAS))
+        self.imageResized = ImageTk.PhotoImage(self.__imageLogo__.resize((int(350), int(160)), PIL.Image.ANTIALIAS))
 
         self.imageOnCanvas = self.canvas_for_image.create_image(0, 0, image=self.imageResized, anchor='nw')
         self.canvas_for_image.itemconfig(self.imageOnCanvas, image=self.imageResized)
-        self.canvas_for_image.pack(anchor='nw', pady=(50, 1))
+        self.canvas_for_image.pack(anchor='nw', pady=(100, 10))
 
     # Center the specified popup window
     @staticmethod
