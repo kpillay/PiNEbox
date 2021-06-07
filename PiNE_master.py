@@ -505,7 +505,7 @@ class PiNeMain(GUIaes):
                     # Overwrite text file with new correct values (after first trying to open), otherwise catch error
                     try:
                         with open('setup.txt', 'w') as IPfile:
-                            IPfile.write(f'LOGIC={self.__logicState__}\nLEDduration={self.__LEDduration__}\n'
+                            IPfile.write(f'LEDduration={self.__LEDduration__}\n'
                                          f'IP={self.varIP.get()}\nPORT={self.varPort.get()}')
 
                     except Exception as inst:
