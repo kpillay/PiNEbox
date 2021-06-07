@@ -45,7 +45,7 @@ class PiNeMain(GUIaes):
             Device.pin_factory = MockFactory()
 
         # Get dimensions
-        self.window.geometry('795x460')
+        self.window.geometry('795x450')
 
         self.window.report_callback_exception = self.__handleException_callback__
         threading.excepthook = self.__handleException_callback__
@@ -121,7 +121,7 @@ class PiNeMain(GUIaes):
         self.labelMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
                                   text='', font=(super().__textFont__, super().__labelFontSize__),
                                   foreground=super().__colourText__)
-        self.labelMess.pack(side=TOP, anchor='w', pady=60)
+        self.labelMess.pack(side=TOP, anchor='w', pady=70)
 
         # Add button frame
         self.buttonFrame = Frame(self.frame1, highlightthickness=0, borderwidth=0, background=super().__frameBgColour__)
