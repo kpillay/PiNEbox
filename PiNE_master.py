@@ -43,15 +43,12 @@ class PiNeMain(GUIaes):
         # Check if code is being run on external OS off-Pi (for simulation), in which case set dummy GPIO pins
         if (platform.system() == 'Darwin') | (platform.system() == 'Windows'):
             Device.pin_factory = MockFactory()
-            # self.window.geometry('800x480')
-            self.window.attributes('-fullscreen', True)
-        else:
-            self.window.attributes('-fullscreen', True)
 
         # Get dimensions
+        self.window.geometry('800x480')
         self.window.update()
-        self.w = self.window.winfo_width()
-        self.h = self.window.winfo_height()
+        self.w = self.window.winfo_screenwidth()
+        self.h = self.window.winfo_screenheight()
         print([self.w, self.h])
 
         self.window.report_callback_exception = self.__handleException_callback__
