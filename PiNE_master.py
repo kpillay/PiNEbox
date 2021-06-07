@@ -342,8 +342,10 @@ class PiNeMain(GUIaes):
     def __loadSetupFile__(self, filename):
 
         # Try reading the setup file
+        dirname = os.path.dirname(__file__)
+
         try:
-            IPfile = open(filename, 'r')
+            IPfile = open(dirname + '/' + filename, 'r')
         except Exception as inst:
             self.labelMess.config(text='Problem with setup.txt. Check log.', foreground=super().__colourText__)
             self.runButton.config(state=DISABLED, image=self.runImageFaded)
