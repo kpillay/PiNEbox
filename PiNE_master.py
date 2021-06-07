@@ -45,8 +45,7 @@ class PiNeMain(GUIaes):
             Device.pin_factory = MockFactory()
 
         # Get dimensions
-        self.window.geometry('795x465')
-        self.window.update()
+        self.window.geometry('795x460')
 
         self.window.report_callback_exception = self.__handleException_callback__
         threading.excepthook = self.__handleException_callback__
@@ -120,9 +119,9 @@ class PiNeMain(GUIaes):
 
         # Create message label
         self.labelMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
-                                  text='', font=(super().__textFont__, super().__HeadFontSize__),
+                                  text='', font=(super().__textFont__, super().__labelFontSize__),
                                   foreground=super().__colourText__)
-        self.labelMess.pack(side=TOP, anchor='w', pady=50)
+        self.labelMess.pack(side=TOP, anchor='w', pady=60)
 
         # Add button frame
         self.buttonFrame = Frame(self.frame1, highlightthickness=0, borderwidth=0, background=super().__frameBgColour__)
@@ -360,7 +359,6 @@ class PiNeMain(GUIaes):
         if (__LEDduration__[0:11] == 'LEDduration') & (__LEDduration__[12:] != ''):
             self.__LEDduration__ = float(__LEDduration__[12:])
         else:
-            print([__LEDduration__[0:11], __LEDduration__[12:]])
             self.varIP.set('-')
             self.varPort.set('-')
             self.labelMess.config(text='Error with LEDduration in setup.txt', foreground=super().__colourText__)
