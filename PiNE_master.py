@@ -34,9 +34,10 @@ class PiNeMain(GUIaes):
         self.releaseDate = releaseDate
         self.dev = dev
         self.messType = 'UDP'
+        self.__logicState__ = 'HIGH'
 
         # Check if code is being run on external OS off-Pi (for simulation), in which case set dummy GPIO pins
-        if (platform.system() == 'Darwin') | ((platform.system() == 'Linux') | (platform.system() == 'Windows')):
+        if (platform.system() == 'Darwin') | (platform.system() == 'Windows'):
             Device.pin_factory = MockFactory()
 
         self.window = tk.Tk()
@@ -49,7 +50,6 @@ class PiNeMain(GUIaes):
 
         self.cont = False
         self.sock = None
-        # self.sockInitEnd = False
         self.__sockTimeout__ = 9  # Allow 9s to connect to IP otherwise throw exception
 
     # Initialize the system
@@ -189,8 +189,6 @@ class PiNeMain(GUIaes):
         # Disable quit button to avoid forcing multi-thread shutdown
         self.quitButton.config(state=DISABLED, image=self.quitImageFaded)
 
-        # self.sockInitEnd = False
-
         # Display status message
         self.labelMess.config(text='Establishing connection...', foreground=super().__colourText__)
 
@@ -207,11 +205,6 @@ class PiNeMain(GUIaes):
 
     # Initiate stop sequence if system has started running
     def __initStop_callback__(self):
-
-        # # Stop UDP transmission thread
-        # if hasattr(self, 'triggerSend'):
-        #     self.triggerSend.cancel = True
-        #     time.sleep(1)
 
         # Close open socket (if established)
         try:
@@ -333,7 +326,7 @@ class PiNeMain(GUIaes):
     @staticmethod
     def __initShutDown_callback__():
 
-        if (platform.system() == 'Darwin') | ((platform.system() == 'Linux') | (platform.system() == 'Windows')):
+        if (platform.system() == 'Darwin') | (platform.system() == 'Windows'):
             sys.exit()  # Just close the Python program
         else:
             os.system('sudo shutdown -h now')   # Shut down Pi completely
@@ -351,17 +344,6 @@ class PiNeMain(GUIaes):
 
             # Log unknown error
             self.logger.exception(inst)
-            return
-
-        # Load logic state
-        __logicState__ = str.rstrip(IPfile.readline())
-        if (__logicState__[0:5] == 'LOGIC') & ((__logicState__[6:] == 'HIGH') | (__logicState__[6:] == 'LOW')):
-            self.__logicState__ = __logicState__[6:]
-        else:
-            self.varIP.set('-')
-            self.varPort.set('-')
-            self.labelMess.config(text='Error with LOGIC state in setup.txt', foreground=super().__colourText__)
-            self.runButton.config(state=DISABLED, image=self.runImageFaded)
             return
 
         # Load LED duration value
@@ -412,8 +394,7 @@ class PiNeMain(GUIaes):
         # Enable quit button
         self.quitButton.config(state=NORMAL, image=self.quitImage)
 
-    # Process to deal with closing safely when unexpected socket error occurs (excl. BrokenPipeError which is handled
-    # seperately)
+    # Process to deal with closing safely when unexpected socket error occurs
     def __sockBreakSafe__(self, *_):
 
         # Provide message
@@ -707,7 +688,7 @@ class PiNeMain(GUIaes):
             # Overwrite text file with new correct values (after first trying to open), otherwise catch error
             try:
                 with open('setup.txt', 'w') as IPfile:
-                    IPfile.write(f'LOGIC={self.__logicState__}\nLEDduration={self.__LEDduration__}\n'
+                    IPfile.write(f'LEDduration={self.__LEDduration__}\n'
                                  f'IP={self.varIP.get()}\nPORT={self.varPort.get()}')
 
             except Exception as inst:

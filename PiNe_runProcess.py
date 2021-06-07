@@ -19,7 +19,7 @@ from signal import pause
 class PiNeRun:
 
     # Init. variables
-    def __init__(self, sock, pipeCheck, unknownSockCheck, logicState='HIGH', LEDduration=0.3):
+    def __init__(self, sock, pipeCheck, unknownSockCheck, logicState='HIGH', LEDduration=0.5):
 
         # Set input variables to properties
         self.sock = sock
@@ -28,10 +28,7 @@ class PiNeRun:
         self.logicState = True if logicState == 'HIGH' else False    # 'HIGH' is negative logic, 'LOW' is postive logic
         self.LEDduration = LEDduration
 
-        # # Set cancel state
-        # self.cancel = False
-
-        # Set GPIO pins to appropriate LEDs
+        # Set GPIO pins to appropriate LEDs (output states)
         self.ledButton = LED(23)            # Push-button
         self.ledPinPrick = LED(22)          # PinPrick
         self.ledVisual = LED(21)            # Visual
@@ -40,12 +37,12 @@ class PiNeRun:
         self.ledForce = LED(20)             # Force
 
         # Set read-in GPIO pins to check for triggers (uses Button module)
-        self.inputButton = Button(6, pull_up=self.logicState, bounce_time=0.5)       # Push-button
-        self.inputPinPrick = Button(5, pull_up=self.logicState)                      # PinPrick
-        self.inputVisual = Button(25, pull_up=self.logicState)                       # Visual
-        self.inputAudio = Button(24, pull_up=self.logicState)                        # Audio
-        self.inputLance = Button(18, pull_up=self.logicState)                        # Lance
-        self.inputForce = Button(17, pull_up=self.logicState)                        # Force
+        self.inputButton = Button(16, pull_up=self.logicState, bounce_time=0.5)       # Push-button
+        self.inputPinPrick = Button(19, pull_up=self.logicState)                      # PinPrick
+        self.inputVisual = Button(25, pull_up=self.logicState)                        # Visual
+        self.inputAudio = Button(24, pull_up=self.logicState)                         # Audio
+        self.inputLance = Button(18, pull_up=self.logicState)                         # Lance
+        self.inputForce = Button(17, pull_up=self.logicState)                         # Force
 
     # Run the main trigger send/recieve from the PiNe box
     def __call__(self):
@@ -59,94 +56,6 @@ class PiNeRun:
         self.inputForce.when_pressed = lambda: act_Force
 
         pause()
-
-        # while not self.cancel:
-        #
-        #     # Push-button event
-        #     if self.inputButton.is_pressed:
-        #         MESS = 'PushButton'
-        #         self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
-        #
-        #         # Flash the LEDs then pause to avoid over-triggering
-        #         self.ledButton.on()
-        #         time.sleep(self.LEDduration)
-        #         self.ledButton.off()
-        #         time.sleep(1)
-        #
-        #     # PinPrick event
-        #     elif self.inputPinPrick.is_pressed:
-        #         MESS = 'PinPrick'
-        #         self.sock.sendall(self.sendiXmess(MESS))
-        #         self.ledPinPrick.on()
-        #         time.sleep(self.LEDduration)
-        #         self.ledPinPrick.off()
-        #         time.sleep(1)
-        #
-        #     # Visual event
-        #     elif self.inputVisual.is_pressed:
-        #         MESS = 'Visual'
-        #         self.sock.sendall(self.sendiXmess(MESS))
-        #         self.ledVisual.on()
-        #         time.sleep(self.LEDduration)
-        #         self.ledVisual.off()
-        #         time.sleep(1)
-        #
-        #     # Audio event
-        #     elif self.inputAudio.is_pressed:
-        #         MESS = 'Audio'
-        #         self.sock.sendall(self.sendiXmess(MESS))
-        #         self.ledAudio.on()
-        #         time.sleep(self.LEDduration)
-        #         self.ledAudio.off()
-        #         time.sleep(1)
-        #
-        #     # Heellance event
-        #     elif self.inputLance.is_pressed:
-        #         MESS = 'Heellance'
-        #         self.sock.sendall(self.sendiXmess(MESS))
-        #         self.ledLance.on()
-        #         time.sleep(self.LEDduration)
-        #         self.ledLance.off()
-        #         time.sleep(1)
-        #
-        #     # Force event
-        #     elif self.inputForce.is_pressed:
-        #         MESS = 'Force'
-        #         self.sock.sendall(self.sendiXmess(MESS))
-        #         self.ledForce.on()
-        #         time.sleep(self.LEDduration)
-        #         self.ledForce.off()
-        #         time.sleep(1)
-
-        # # Close GPIO pins if while loop is broken
-        # self.__closeGPIOs__()
-        #
-        # # Close open socket (if established)
-        # try:
-        #     self.sock.shutdown(socket.SHUT_RDWR)
-        # except OSError:
-        #     pass
-        # self.sock.close()
-        # self.sock = None
-
-        # Catch if server connection fails during data transmission
-        # except BrokenPipeError:
-        #
-        #     # Close GPIO pins
-        #     self.__closeGPIOs__()
-        #
-        #     # Close open socket (if established)
-        #     try:
-        #         self.sock.shutdown(socket.SHUT_RDWR)
-        #     except OSError:
-        #         pass
-        #     self.sock.close()
-        #     self.sock = None
-        #
-        #     # Triggers callback in PiNE_master to safely handle broken pipe errors
-        #     self.pipeCheck.set(True)
-
-        # General exception for other errors (send general error message and log error for debugging)
 
     # ####### CALLBACKS ####### ####### ####### ####### ####### ####### ####### ####### ####### ####### ####### #######
     # Callback to perform push button activation protocol
@@ -243,7 +152,7 @@ class PiNeRun:
     # Callback to perform Force activation protocol
     def act_Force(self):
         try:
-            MESS = 'Touch'
+            MESS = 'Tactile'
             self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
 
             # Flash the LEDs
