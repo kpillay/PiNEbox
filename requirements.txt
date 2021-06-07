@@ -2,3 +2,4 @@ colorzero==2.0
 gpiozero==1.6.2
 Pillow==8.2.0
 rpi==0.0.1
+RPi.GPIO==0.7.0
