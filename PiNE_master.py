@@ -45,7 +45,7 @@ class PiNeMain(GUIaes):
             Device.pin_factory = MockFactory()
 
         # Get dimensions
-        self.window.geometry('800x480')
+        self.window.geometry('780x400')
         self.window.update()
         self.w = self.window.winfo_screenwidth()
         self.h = self.window.winfo_screenheight()
