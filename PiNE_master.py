@@ -45,7 +45,7 @@ class PiNeMain(GUIaes):
             Device.pin_factory = MockFactory()
 
         # Get dimensions
-        self.window.geometry('795x470')
+        self.window.geometry('795x465')
         self.window.update()
 
         self.window.report_callback_exception = self.__handleException_callback__
@@ -73,8 +73,8 @@ class PiNeMain(GUIaes):
         self.frame2.grid(row=0, column=1, sticky='nsew')
 
         self.window.grid_rowconfigure(0, minsize=790, weight=1)
-        self.window.grid_columnconfigure(0, minsize=295)
-        self.window.grid_columnconfigure(1, minsize=495)
+        self.window.grid_columnconfigure(0, minsize=300)
+        self.window.grid_columnconfigure(1, minsize=490)
 
         # IP address label
         self.labelIP = tk.Label(self.frame1, bg=super().__frameBgColour__,
@@ -114,15 +114,15 @@ class PiNeMain(GUIaes):
         self.instr_text = Label(self.frame2, bg=super().__frameBgColour__,
                                 text=f'Released on {self.releaseDate} \n'
                                      f'Developed by {self.dev}',
-                                font=(super().__textFont__, super().__textFontSize__), fg=super().__colourSubHead__)
-
-        self.instr_text.pack(side=TOP)
+                                font=(super().__textFont__, super().__textFontSize__), fg=super().__colourSubHead__,
+                                justify=LEFT)
+        self.instr_text.pack(side=TOP, anchor='w')
 
         # Create message label
         self.labelMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
                                   text='', font=(super().__textFont__, super().__HeadFontSize__),
                                   foreground=super().__colourText__)
-        self.labelMess.pack(side=LEFT)
+        self.labelMess.pack(side=TOP, anchor='w', pady=50)
 
         # Add button frame
         self.buttonFrame = Frame(self.frame1, highlightthickness=0, borderwidth=0, background=super().__frameBgColour__)

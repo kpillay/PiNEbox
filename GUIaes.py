@@ -43,13 +43,13 @@ class GUIaes:
 
     # Render the logo
     def __renderLogo__(self, master):
-        self.canvas_for_image = Canvas(master, height=int(180), width=int(350), borderwidth=0, highlightthickness=0,
+        self.canvas_for_image = Canvas(master, height=int(170), width=int(350), borderwidth=0, highlightthickness=0,
                                        bg='#504f51')
-        self.imageResized = ImageTk.PhotoImage(self.__imageLogo__.resize((int(350), int(160)), PIL.Image.ANTIALIAS))
+        self.imageResized = ImageTk.PhotoImage(self.__imageLogo__.resize((int(350), int(170)), PIL.Image.ANTIALIAS))
 
         self.imageOnCanvas = self.canvas_for_image.create_image(0, 0, image=self.imageResized, anchor='nw')
         self.canvas_for_image.itemconfig(self.imageOnCanvas, image=self.imageResized)
-        self.canvas_for_image.pack(anchor='nw', pady=(100, 10))
+        self.canvas_for_image.pack(anchor='nw', pady=(50, 1))
 
     # Center the specified popup window
     @staticmethod
