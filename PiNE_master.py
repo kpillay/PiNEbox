@@ -45,7 +45,7 @@ class PiNeMain(GUIaes):
             Device.pin_factory = MockFactory()
 
         # Get dimensions
-        self.window.geometry('795x450')
+        self.window.geometry('795x440')
 
         self.window.report_callback_exception = self.__handleException_callback__
         threading.excepthook = self.__handleException_callback__

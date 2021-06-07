@@ -19,7 +19,7 @@ class GUIaes:
     # Formatting variables
     __textFont__ = 'Open Sans'
     __titleFontSize__ = 30
-    __HeadFontSize__ = 20
+    __HeadFontSize__ = 18
     __labelFontSize__ = 12
     __textFontSize__ = 10
     __frameBgColour__ = '#504f51'
