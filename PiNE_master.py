@@ -360,6 +360,7 @@ class PiNeMain(GUIaes):
         if (__LEDduration__[0:11] == 'LEDduration') & (__LEDduration__[12:] != ''):
             self.__LEDduration__ = float(__LEDduration__[12:])
         else:
+            print([__LEDduration__[0:11], __LEDduration__[12:]])
             self.varIP.set('-')
             self.varPort.set('-')
             self.labelMess.config(text='Error with LEDduration in setup.txt', foreground=super().__colourText__)
