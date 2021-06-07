@@ -36,14 +36,23 @@ class PiNeMain(GUIaes):
         self.messType = 'UDP'
         self.__logicState__ = 'HIGH'
 
+        self.window = tk.Tk()
+        self.window.resizable(0, 0)
+        self.window.title(f'PiNe v{self.ver}')
+
         # Check if code is being run on external OS off-Pi (for simulation), in which case set dummy GPIO pins
         if (platform.system() == 'Darwin') | (platform.system() == 'Windows'):
             Device.pin_factory = MockFactory()
+            # self.window.geometry('800x480')
+            self.window.attributes('-fullscreen', True)
+        else:
+            self.window.attributes('-fullscreen', True)
 
-        self.window = tk.Tk()
-        self.window.geometry('800x480')
-        self.window.resizable(0, 0)
-        self.window.title(f'PiNe v{self.ver}')
+        # Get dimensions
+        self.window.update()
+        self.w = self.window.winfo_width()
+        self.h = self.window.winfo_height()
+        print([self.w, self.h])
 
         self.window.report_callback_exception = self.__handleException_callback__
         threading.excepthook = self.__handleException_callback__
@@ -69,7 +78,7 @@ class PiNeMain(GUIaes):
         self.frame2 = tk.Frame(self.window, bg=super().__frameBgColour__)
         self.frame2.grid(row=0, column=1, sticky='nsew')
 
-        self.window.grid_rowconfigure(0, minsize=480, weight=1)
+        self.window.grid_rowconfigure(0, minsize=self.h, weight=1)
         self.window.grid_columnconfigure(0, minsize=300)
         self.window.grid_columnconfigure(1, minsize=500)
 
