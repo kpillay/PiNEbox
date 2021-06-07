@@ -48,7 +48,7 @@ class PiNeRun:
     def __call__(self):
 
         # try:
-        self.inputButton.when_pressed = lambda: self.act_PushButton
+        self.inputButton.when_pressed = self.act_PushButton
         self.inputPinPrick.when_pressed = lambda: self.act_PinPrick
         self.inputVisual.when_pressed = lambda: self.act_Visual
         self.inputAudio.when_pressed = lambda: self.act_Audio
