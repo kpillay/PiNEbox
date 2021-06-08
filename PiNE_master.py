@@ -44,7 +44,7 @@ class PiNeMain(GUIaes):
             Device.pin_factory = MockFactory()
 
         # Get dimensions
-        self.window.geometry('795x440')
+        self.window.geometry('800x440')
 
         self.window.report_callback_exception = self.__handleException_callback__
         threading.excepthook = self.__handleException_callback__
@@ -70,9 +70,9 @@ class PiNeMain(GUIaes):
         self.frame2 = tk.Frame(self.window, bg=super().__frameBgColour__)
         self.frame2.grid(row=0, column=1, sticky='nsew')
 
-        self.window.grid_rowconfigure(0, minsize=790, weight=1)
+        self.window.grid_rowconfigure(0, minsize=800, weight=1)
         self.window.grid_columnconfigure(0, minsize=300)
-        self.window.grid_columnconfigure(1, minsize=490)
+        self.window.grid_columnconfigure(1, minsize=500)
 
         # IP address label
         self.labelIP = tk.Label(self.frame1, bg=super().__frameBgColour__,
@@ -117,10 +117,12 @@ class PiNeMain(GUIaes):
         self.instr_text.pack(side=TOP, anchor='w')
 
         # Create message label
-        self.labelMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
+        self.labelFrame = tk.Frame(self.frame2, bg=super().__frameBgColour__)
+        self.labelFrame.pack(side=TOP, anchor='w', pady=70)
+        self.labelMess = tk.Label(self.labelFrame, bg=super().__frameBgColour__,
                                   text='', font=(super().__textFont__, super().__labelFontSize__),
                                   foreground=super().__colourText__)
-        self.labelMess.pack(side=TOP, anchor='w', pady=70)
+        self.labelMess.pack(side=LEFT)
 
         # Add button frame
         self.buttonFrame = Frame(self.frame1, highlightthickness=0, borderwidth=0, background=super().__frameBgColour__)
@@ -420,9 +422,9 @@ class PiNeMain(GUIaes):
     def __countdown__(self):
 
         # Create countdown label
-        self.countdownMess = tk.Label(self.frame2, bg=super().__frameBgColour__,
-                                      text='', font=(super().__textFont__, super().__HeadFontSize__),
-                                      foreground=super().__colourText__)
+        self.countdownMess = tk.Label(self.labelFrame, bg=super().__frameBgColour__,
+                                      text='', font=(super().__textFont__, super().__labelFontSize__),
+                                      foreground=super().__colourText__, justify=LEFT)
         self.countdownMess.pack(side=LEFT)
 
         stTime = self.__sockTimeout__
