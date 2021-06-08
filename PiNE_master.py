@@ -131,10 +131,10 @@ class PiNeMain(GUIaes):
         self.buttonFrame.grid(row=5, column=0, padx=70, pady=(40, 5), sticky=W)
 
         # Add RUN button
-        self.runImage = super().__renderImageOnly__(50, 50, 'unused/start_icon.png')
+        self.runImage = super().__renderImageOnly__(50, 50, 'start_icon_grey.png')
         self.runImageFaded = super().__renderImageOnly__(50, 50, 'start_icon_faded.png')
         self.runButton = Button(self.buttonFrame, image=self.runImage, relief=FLAT,
-                                compound=LEFT,  highlightthickness=0, borderwidth=0, highlightbackground='black',
+                                compound=LEFT,  highlightthickness=0, borderwidth=0, highlightbackground='red',
                                 command=self.__initSocket_callback__)
         self.runButton.pack(side=LEFT, padx=4)
 
