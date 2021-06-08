@@ -111,7 +111,8 @@ class PiNeMain(GUIaes):
 
         # TEXT
         self.instr_text = Label(self.frame2, bg=super().__frameBgColour__,
-                                text=f'Released on {self.releaseDate} \n'
+                                text=f'Version {self.ver} \n'
+                                     f'Released on {self.releaseDate} \n'
                                      f'Developed by {self.dev}',
                                 font=(super().__textFont__, super().__textFontSize__), fg=super().__colourSubHead__,
                                 justify=LEFT)
