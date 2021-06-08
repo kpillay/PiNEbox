@@ -1,6 +1,5 @@
 """
 Main GUI for the PiNE box project
-v BETA: interface and functions to add automatic triggers to the vital signs recordings
 
 Maria Cobo, Kirubin Pillay 13/05/2020
 """

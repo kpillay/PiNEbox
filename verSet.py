@@ -1,5 +1,7 @@
 """
 Class to set the version for PiNe app
+
+Maria Cobo, Kirubin Pillay 13/05/2020
 """
 
 

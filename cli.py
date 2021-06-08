@@ -1,5 +1,8 @@
-# cli.py simply runs the main function within PiNe_master - more efficient when packaging a bundle
-# Kirubin Pillay 01/12/2020
+"""
+cli.py simply runs the main function within PiNe_master - more efficient when packaging a bundle
+
+Maria Cobo, Kirubin Pillay 13/05/2020
+"""
 
 from PiNE_master import main
 from verSet import verSet
