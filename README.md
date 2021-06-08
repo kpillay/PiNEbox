@@ -14,26 +14,25 @@ Version 1.0 (Released 07/06/2021)
 ## Citation
 A manuscript is currently in development and will require citing once published. The citation will be provided here.
 
-## Readme structure
+## Repository Structure
 To develop the PiNe box, this repository contains the following information:
 1. Instructions for building the PiNe box and setting up the Raspberry Pi. Go to the folder 'PiNeBox_setup' which contains two files:
 a. 'PiNeBox_hardware' - Instructions for constructing the PiNe box hardware including parts lists, key datasheets and circuit diagrams.
 b. 'PiNeBox_software' - Instructions for setting up the Raspberry Pi OS (this guide assumes Raspbian is installed on the Pi).
+2. The python source code to develop and run the Python UI on the configured Raspberry Pi.
 
-## Downloading and Installing the Git Repository
+## Downloading the Git Repository
 ### Dependencies
-This code requires Python 3.7.0 or higher.
+The Python UI code requires Python 3.7.0 or higher.
 
 ### On a PC/Mac (for developers)
-1. To install the repository on a PC/Mac for editing/further development:
+1. To download install the repository on a PC/Mac for editing/further development:
 
 ```
 git clone https://github.com/kpillay/PiNEbox.git
 cd PiNEbox. 
 pip install -r requirements.txt
 ```
-
-2. Run `cli.py` to begin PiNe UI.
 
 ### On a Raspberry Pi (for non-developers)
 1. The Pi typically comes installed with Python 2 and possibly a version of Python 3 (<3.7.0) at least on the Raspbian OS. If this is the case, Python 3.7 will first need to be installed and symlinked to the `python` command when run on the terminal. To achieve this, follow the instructions found in: https://installvirtual.com/install-python-3-7-on-raspberry-pi/. Otherwise skip to step 3.
@@ -46,7 +45,9 @@ cd PiNEbox
 python -m pip install -r requirements.txt
 ```
 
-3. To run the PiNe UI, run `cli.py` directly in the terminal using the following command:
+## Running the PiNe Box UI
+
+3. To run the PiNe UI on PC/Mac/Raspberry Pi, simply run `cli.py` in your chosen IDE. To run directly in the terminal, use the following command:
 ```
 python cli.py
 ```
