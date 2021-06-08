@@ -44,7 +44,7 @@ class PiNeMain(GUIaes):
             Device.pin_factory = MockFactory()
 
         # Get dimensions
-        self.window.geometry('810x440')
+        self.window.geometry('795x440')
 
         self.window.report_callback_exception = self.__handleException_callback__
         threading.excepthook = self.__handleException_callback__
@@ -70,9 +70,9 @@ class PiNeMain(GUIaes):
         self.frame2 = tk.Frame(self.window, bg=super().__frameBgColour__)
         self.frame2.grid(row=0, column=1, sticky='nsew')
 
-        self.window.grid_rowconfigure(0, minsize=810, weight=1)
-        self.window.grid_columnconfigure(0, minsize=305)
-        self.window.grid_columnconfigure(1, minsize=505)
+        self.window.grid_rowconfigure(0, minsize=795, weight=1)
+        self.window.grid_columnconfigure(0, minsize=300)
+        self.window.grid_columnconfigure(1, minsize=495)
 
         # IP address label
         self.labelIP = tk.Label(self.frame1, bg=super().__frameBgColour__,
