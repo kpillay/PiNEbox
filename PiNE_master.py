@@ -37,7 +37,7 @@ class PiNeMain(GUIaes):
 
         self.window = tk.Tk()
         self.window.resizable(0, 0)
-        self.window.title(f'PiNe v{self.ver}')
+        # self.window.title(f'PiNe v{self.ver}')
 
         # Check if code is being run on external OS off-Pi (for simulation), in which case set dummy GPIO pins
         if (platform.system() == 'Darwin') | (platform.system() == 'Windows'):
