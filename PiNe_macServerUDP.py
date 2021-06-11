@@ -12,8 +12,7 @@ Kirubin Pillay 30/05/2020
 import socket
 import sys
 
-# HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-HOST = '169.254.148.147'  # Dynamic IP from mac
+HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 8000         # Port to listen on (non-privileged ports are > 1023) - same as iXtrend
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
