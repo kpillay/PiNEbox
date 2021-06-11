@@ -47,7 +47,6 @@ class PiNeRun:
     # Run the main trigger send/recieve from the PiNe box
     def __call__(self):
 
-        # try:
         self.inputButton.when_pressed = self.act_PushButton
         self.inputPinPrick.when_pressed = self.act_PinPrick
         self.inputVisual.when_pressed = self.act_Visual
