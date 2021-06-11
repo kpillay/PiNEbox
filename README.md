@@ -4,8 +4,8 @@ The PiNe box is an enclosed device run with a Raspberry Pi that allows for the s
 
 These instructions are for six input triggers (Push Button, Lance, Tactile, Auditory, Visual and Experimental/Pin Prick stimuli) using TTL specification and the vital signs system is currently assumed to be iXTrend developed by iXcellence: https://www.ixellence.com/index.php/en/home/17-default-en/products
 
-Authors/Developers: Kirubin Pillay, Maria Cobo Andrade, Caroline Hartley, Alan Worley 07/06/2021
-Paediatric Neuroimaging Group, University of Oxford, Oxford, UK.
+Developers: Kirubin Pillay, Maria Cobo Andrade, Caroline Hartley, Alan Worley 07/06/2021  
+Paediatric Neuroimaging Group, University of Oxford, Oxford, UK.  
 Great Ormond Street Hospital, London, UK.
 
 ## Current Version
@@ -16,7 +16,7 @@ A manuscript is currently in development and will require citing once published.
 
 ## Repository Structure
 To develop the PiNe box, this repository contains the following information:
-1. **PiNe Box construction instructions:** Building the PiNe box and setting up the Raspberry Pi Including datasheets, schematics etc. Go to the folder 'PiNeBox_setup' in the repository. Begin with the pdf 'PiNeBox_hardware' for overall instructions for constructing the PiNe box.
+1. **PiNe Box construction instructions:** Building the PiNe box and setting up the Raspberry Pi Including datasheets, schematics etc. Go to the folder 'PiNeBox_setup' in the repository. Begin with the pdf 'PiNeBox_hardware' for overall instructions for constructing the PiNe box. This pdf will be included once the paper is live.
 2. **Raspberry Pi OS software configuration**: Instructions for setting up the Raspberry Pi OS (this guide assumes a recent version of Raspbian is already installed on the Pi) - see rest of this readme documentation.
 3. **The Python UI**: Source code to develop and run the Python UI on the configured Raspberry Pi. See rest of this readme for instructions on how to run and automatically start on boot.
 
