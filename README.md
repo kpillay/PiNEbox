@@ -63,7 +63,7 @@ The soft shutdown button utilizes the TxD pin on the Pi GPIO to provide the user
 2. At the end of the file, add the line `enable_uart=1`, then save and close.
 3. Reboot the pi and the activity LED should now turn on.
 
-### Installing a virtual keyboard for the touch screen.
+### Installing a virtual keyboard for the touch screen
 The matchbox-keyboard is chosen here. To install it and create a shortcut on the toolbar:
 1. Install keyboard by typing in the Pi Terminal `sudo apt-get install matchbox-keyboard`.
 2. Reboot the pi
@@ -89,6 +89,9 @@ To run the PiNe UI on PC/Mac/Raspberry Pi, simply run `cli.py` in your chosen ID
 ```
 python cli.py
 ```
+
+### Testing the Python UI
+The Python UI can be tested by setting the IP address to localhost (127.0.0.1) and running the script as above. Opening a parallel python session with the provided server scripts PiNe_macServerUDP.py and PiNe_macServerTCP.py based on the messaging choice will allow testing that the cli.py scripts are successfully sending messages back to your local machine.
 
 ### Setting up to automatically run when Pi boots up
 Once the Python UI can be successfully opened as above using the terminal, it can be set up to automatically open whenever the Pi boots. **The following instructions assumes the PiNEbox repository folder is on the desktop**:
