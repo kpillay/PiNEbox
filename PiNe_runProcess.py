@@ -37,7 +37,7 @@ class PiNeRun:
         self.ledForce = LED(20)             # Force
 
         # Set read-in GPIO pins to check for triggers (uses Button module)
-        self.inputButton = Button(16, pull_up=self.logicState, bounce_time=0.3)       # Push-button
+        self.inputButton = Button(16, pull_up=self.logicState)       # Push-button
         self.inputPinPrick = Button(19, pull_up=self.logicState)                      # PinPrick
         self.inputVisual = Button(25, pull_up=self.logicState)                        # Visual
         self.inputAudio = Button(24, pull_up=self.logicState)                         # Audio
