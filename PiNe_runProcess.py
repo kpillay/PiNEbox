@@ -44,7 +44,7 @@ class PiNeRun:
         self.inputLance = Button(18, pull_up=self.logicState)                         # Lance
         self.inputForce = Button(17, pull_up=self.logicState)                         # Force
 
-    # Run the main trigger send/recieve from the PiNe box
+    # Run the main trigger send/receive from the PiNe box
     def __call__(self):
 
         self.inputButton.when_pressed = self.act_PushButton
@@ -60,6 +60,8 @@ class PiNeRun:
     # Callback to perform push button activation protocol
     def act_PushButton(self):
         try:
+            tic = time.perf_counter()
+
             MESS = 'PushButton'
             self.sock.sendall(self.sendiXmess(MESS))    # Send the message to server
 
@@ -243,4 +245,8 @@ class PiNeRun:
         iX_message = start + end + message_len + my_str_as_bytes
 
         return iX_message
+
+        toc = time.perf_counter()
+
+        print(f"Time for code to run was {toc - tic :0.2f}seconds")
 
